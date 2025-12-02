@@ -354,9 +354,9 @@ def main():
     # ------------------------------------------------------------------
     detector = ComplaintAnomalyDetector(
         contamination=0.05,
-        max_samples=10000,
-        n_estimators=300,
-        max_features=1.0,
+        max_samples=30000,
+        n_estimators=400,
+        max_features=0.8,
     )
 
     # ------------------------------------------------------------------
