@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+import matplotlib
 import seaborn as sns
 from collections import Counter
 import itertools
@@ -19,6 +20,11 @@ from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Configure matplotlib for Thai fonts
+plt.rcParams['font.family'] = ['sans-serif']
+plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'DejaVu Sans', 'Tahoma', 'Arial']
+plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign display
 
 
 class ComplaintNetworkAnalyzer:
@@ -86,6 +92,7 @@ class ComplaintNetworkAnalyzer:
     def build_organization_network(self, df: pd.DataFrame):
         """
         Build network of organizations handling similar complaints
+        Uses sampling to avoid memory issues with large datasets
         """
         logger.info("Building organization collaboration network...")
 
@@ -99,24 +106,34 @@ class ComplaintNetworkAnalyzer:
 
         df['primary_type'] = df['type'].apply(get_primary_type)
 
-        # Create edges between organizations handling same complaint type
-        type_orgs = df.groupby('primary_type')['organization'].apply(list).to_dict()
+        # Get organization counts per type (instead of full lists)
+        type_org_pairs = df.groupby(['primary_type', 'organization']).size().reset_index(name='count')
+        type_org_pairs = type_org_pairs[type_org_pairs['organization'].notna()]
+        type_org_pairs = type_org_pairs[type_org_pairs['organization'] != 'ไม่ระบุหน่วยงาน']
 
         self.organization_network = nx.Graph()
 
-        for complaint_type, orgs in type_orgs.items():
-            orgs_unique = list(set([str(o) for o in orgs if pd.notna(o) and str(o) != 'ไม่ระบุหน่วยงาน']))
+        # Group by complaint type and get organizations
+        for complaint_type, group in type_org_pairs.groupby('primary_type'):
+            orgs = group['organization'].unique().tolist()
 
-            if len(orgs_unique) > 1:
-                for org1, org2 in itertools.combinations(orgs_unique, 2):
+            # Limit to top organizations per type to avoid memory issues
+            if len(orgs) > 20:
+                # Keep only top 20 most active organizations for this type
+                top_orgs = group.nlargest(20, 'count')['organization'].tolist()
+                orgs = top_orgs
+
+            if len(orgs) > 1:
+                for org1, org2 in itertools.combinations(orgs, 2):
                     if self.organization_network.has_edge(org1, org2):
                         self.organization_network[org1][org2]['weight'] += 1
                     else:
                         self.organization_network.add_edge(org1, org2, weight=1)
 
-        # Filter to keep only well-connected organizations (degree >= 2)
-        nodes_to_remove = [node for node, degree in dict(self.organization_network.degree()).items() if degree < 2]
-        self.organization_network.remove_nodes_from(nodes_to_remove)
+        # Filter to keep only well-connected organizations (degree >= 3)
+        if len(self.organization_network.nodes()) > 0:
+            nodes_to_remove = [node for node, degree in dict(self.organization_network.degree()).items() if degree < 3]
+            self.organization_network.remove_nodes_from(nodes_to_remove)
 
         logger.info(f"Created org network with {self.organization_network.number_of_nodes()} nodes "
                    f"and {self.organization_network.number_of_edges()} edges")
@@ -188,7 +205,7 @@ class ComplaintNetworkAnalyzer:
         if communities:
             node_colors = [communities.get(node, 0) for node in G.nodes()]
             n_communities = len(set(communities.values()))
-            cmap = plt.cm.get_cmap('tab20', n_communities)
+            cmap = matplotlib.colormaps.get_cmap('tab20').resampled(n_communities)
         else:
             node_colors = 'lightblue'
             cmap = None
