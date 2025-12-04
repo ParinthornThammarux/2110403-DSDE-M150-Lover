@@ -11,12 +11,21 @@ Interactive visualization tools for Bangkok Traffy complaint data analysis, incl
 - **Analytics**: District heatmaps, category distributions, resolution time analysis
 - **Anomaly Detection**: Identification of unusual complaint patterns
 
-### 2. Graph Network Analysis (`graphs/network_analysis.py`)
+### 2. Interactive Network Analysis Dashboard (`dashboard/network_app.py`) **NEW!**
+- **Interactive Network Visualization**: Real-time interactive network graphs with Pyvis
 - **Complaint Co-occurrence Network**: Visualizes relationships between complaint types
 - **Organization Collaboration Network**: Shows organizations handling similar issues
-- **Community Detection**: Identifies clusters of related complaints/organizations
-- **Centrality Analysis**: Measures importance of nodes in the network
-- **Interactive Visualizations**: Both static (PNG) and interactive (HTML) outputs
+- **Community Detection**: Visual identification of related clusters
+- **Multiple Layouts**: Spring, Kamada-Kawai, Circular, Random layouts
+- **Centrality Analysis**: Degree, Betweenness, Closeness, PageRank metrics
+- **Degree Distribution**: Statistical analysis with log-log plots
+- **Full Customization**: Adjust node sizes, spacing, colors, edge visibility
+
+### 3. Graph Network Analysis Script (`graphs/network_analysis.py`)
+- **Batch Processing**: Generate all network visualizations at once
+- **Static Outputs**: PNG images with matplotlib
+- **Interactive HTML**: Standalone HTML files with Plotly
+- **Data Exports**: GraphML, GML, edge list formats
 
 ## Prerequisites
 
@@ -75,7 +84,38 @@ The dashboard will open in your browser at `http://localhost:8501`
 3. **📈 Analytics**: Category distributions, heatmaps, resolution times
 4. **🔍 Anomaly Detection**: Unusual complaints based on resolution time
 
-### Running Network Analysis
+### Running Interactive Network Analysis Dashboard
+
+From the **project root directory**:
+
+```bash
+streamlit run visualization/dashboard/network_app.py
+```
+
+Opens at `http://localhost:8502` (different port from main dashboard)
+
+#### Network Dashboard Features:
+
+**Network Selection:**
+- Complaint Type Co-occurrence Network
+- Organization Collaboration Network
+
+**Visualization Controls:**
+- Layout algorithms (Spring, Kamada-Kawai, Circular, Random)
+- Node sizing by centrality metrics
+- Adjustable graph size and spacing
+- Edge visibility toggle
+- Community detection with color coding
+
+**Analysis Tab:**
+- Basic network statistics (nodes, edges, density, diameter)
+- Top central nodes by multiple metrics
+- Degree distribution plots (linear and log-log)
+- Complete centrality analysis table
+- Community analysis with members list
+- Downloadable CSV exports
+
+### Running Network Analysis Script (Batch Mode)
 
 From the **project root directory**:
 
