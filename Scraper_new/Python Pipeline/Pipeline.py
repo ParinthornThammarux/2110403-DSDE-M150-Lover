@@ -1,6 +1,6 @@
 import pandas as pd
 import instructor
-import google.generativeai as genai
+from google import genai
 from pydantic import BaseModel, Field
 from typing import List
 import openmeteo_requests
@@ -38,23 +38,35 @@ def extract_events_with_gemini(row_text, date_context):
     if not isinstance(row_text, str) or not row_text.strip():
         return []
 
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    client = instructor.from_gemini(
-        client=genai.GenerativeModel(model_name="gemini-1.5-flash"),
-        mode=instructor.Mode.GEMINI_JSON
+    # Configure Gemini API
+    genai_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+
+    # Debug: Print model being used
+    model_name = "gemini-2.5-flash"
+    print(f"  [DEBUG] Using model: {model_name} for date: {date_context}")
+
+    # Create instructor client with new method
+    client = instructor.from_genai(
+        client=genai_client,
+        model=model_name,
+        mode=instructor.Mode.GENAI_STRUCTURED_OUTPUTS
     )
 
     try:
+        print(f"  [DEBUG] Sending request to Gemini API...")
         resp = client.chat.completions.create(
             response_model=DailyOutageSchedule,
             messages=[{
-                "role": "user", 
+                "role": "user",
                 "content": f"Date: {date_context}. Extract outage events: {row_text}"
             }],
         )
+        print(f"  [DEBUG] Received {len(resp.events)} events from API")
         return resp.events
     except Exception as e:
         print(f"  [!] AI Error on {date_context}: {e}")
+        import traceback
+        print(f"  [DEBUG] Full traceback:\n{traceback.format_exc()}")
         return []
 
 def fetch_weather_history(dates, lat=13.75, long=100.50):
