@@ -57,6 +57,7 @@ def load_data():
 
     # Load CSV
     df = pd.read_csv(csv_path)
+    initial_rows = len(df)
 
     # Parse type field - it's a set string like "{น้ำท่วม,ร้องเรียน}"
     def parse_types(type_str):
@@ -101,16 +102,22 @@ def load_data():
     df['anomaly_score'] = np.abs(df['solve_days'] - median_solve) / (std_solve + 1)
     df['anomaly_score'] = df['anomaly_score'].clip(0, 1)
 
-    # Extract time components
+    # Extract time components (only for valid timestamps)
     df['year'] = df['timestamp'].dt.year
     df['month'] = df['timestamp'].dt.month
     df['day_of_week'] = df['timestamp'].dt.dayofweek
     df['hour'] = df['timestamp'].dt.hour
 
-    # Drop rows with missing critical data
-    df = df.dropna(subset=['lat', 'lon', 'timestamp'])
+    # Track data quality
+    data_quality = {
+        'initial_rows': initial_rows,
+        'missing_lat': df['lat'].isna().sum(),
+        'missing_lon': df['lon'].isna().sum(),
+        'missing_timestamp': df['timestamp'].isna().sum(),
+        'missing_any_geo': df[['lat', 'lon']].isna().any(axis=1).sum(),
+    }
 
-    return df
+    return df, data_quality
 
 
 @st.cache_data
@@ -347,11 +354,59 @@ def main():
 
     # Load data
     with st.spinner("Loading data..."):
-        df = load_data()
+        df, data_quality = load_data()
         df_forecast = load_forecast_data()
+
+    # Data Quality Alert
+    if data_quality['missing_any_geo'] > 0:
+        with st.expander("⚠️ Data Quality Report - Click to expand", expanded=False):
+            st.warning(f"**Data Filtering Applied**: Some rows have missing data")
+
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Rows in CSV", f"{data_quality['initial_rows']:,}")
+            with col2:
+                st.metric("Missing Coordinates", f"{data_quality['missing_any_geo']:,}")
+            with col3:
+                st.metric("Missing Timestamp", f"{data_quality['missing_timestamp']:,}")
+
+            st.info(f"""
+            **Why rows are missing:**
+            - {data_quality['missing_lat']:,} rows missing latitude
+            - {data_quality['missing_lon']:,} rows missing longitude
+            - {data_quality['missing_timestamp']:,} rows missing valid timestamp
+            - {data_quality['missing_any_geo']:,} rows missing coordinates (can't be shown on map)
+
+            **Current behavior:**
+            - Geospatial maps require valid coordinates (lat/lon)
+            - Time series analysis requires valid timestamps
+            - All other analytics use available data
+            """)
 
     # Sidebar filters
     st.sidebar.header("📊 Filters & Settings")
+
+    # Data filtering option
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🔧 Data Options")
+
+    filter_mode = st.sidebar.radio(
+        "Include rows with missing data:",
+        ["Only complete data (for maps)", "All data (no maps)"],
+        help="Maps require coordinates. Choose 'All data' to analyze everything without maps."
+    )
+
+    # Apply coordinate filtering based on user choice
+    if filter_mode == "Only complete data (for maps)":
+        df = df.dropna(subset=['lat', 'lon', 'timestamp'])
+        show_maps = True
+    else:
+        # Keep all data, only drop rows without timestamp (needed for time series)
+        df = df.dropna(subset=['timestamp'])
+        show_maps = False
+        st.sidebar.info("📍 Map features disabled - showing all data")
+
+    st.sidebar.markdown("---")
 
     # Date range filter
     min_date = df['timestamp'].min().date()
@@ -440,22 +495,43 @@ def main():
     with tab1:
         st.header("Interactive Geospatial Map")
 
-        # Create and display map
-        with st.spinner("Generating map..."):
-            m = create_geospatial_map(df_filtered.head(5000), map_type=map_type)
-            folium_static(m, width=1200, height=600)
+        if show_maps:
+            # Create and display map
+            with st.spinner("Generating map..."):
+                m = create_geospatial_map(df_filtered.head(5000), map_type=map_type)
+                folium_static(m, width=1200, height=600)
 
-        # District statistics
-        st.subheader("District Statistics")
-        district_stats = df_filtered.groupby('district').agg({
-            'lat': 'count',  # Using lat as count
-            'solve_days': 'mean',
-            'anomaly_score': 'mean'
-        }).round(2)
-        district_stats.columns = ['Total Complaints', 'Avg Resolution Days', 'Avg Anomaly Score']
-        district_stats = district_stats.sort_values('Total Complaints', ascending=False)
+            # District statistics
+            st.subheader("District Statistics")
+            district_stats = df_filtered.groupby('district').agg({
+                'lat': 'count',  # Using lat as count
+                'solve_days': 'mean',
+                'anomaly_score': 'mean'
+            }).round(2)
+            district_stats.columns = ['Total Complaints', 'Avg Resolution Days', 'Avg Anomaly Score']
+            district_stats = district_stats.sort_values('Total Complaints', ascending=False)
 
-        st.dataframe(district_stats, use_container_width=True)
+            st.dataframe(district_stats, use_container_width=True)
+        else:
+            st.warning("⚠️ **Map features disabled** - You've selected 'All data (no maps)' mode")
+            st.info("""
+            To view geospatial maps:
+            1. Go to sidebar → Data Options
+            2. Select 'Only complete data (for maps)'
+
+            This will filter to rows with valid coordinates (lat/lon).
+            """)
+
+            # Still show district statistics without map
+            st.subheader("District Statistics (All Data)")
+            if 'district' in df_filtered.columns:
+                district_stats = df_filtered.groupby('district').agg({
+                    'solve_days': ['count', 'mean'],
+                    'anomaly_score': 'mean'
+                }).round(2)
+                district_stats.columns = ['Total Complaints', 'Avg Resolution Days', 'Avg Anomaly Score']
+                district_stats = district_stats.sort_values('Total Complaints', ascending=False)
+                st.dataframe(district_stats, use_container_width=True)
 
     with tab2:
         st.header("Time Series Analysis & Forecasting")
