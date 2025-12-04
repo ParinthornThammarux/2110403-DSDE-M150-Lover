@@ -357,12 +357,10 @@ def main():
     min_date = df['timestamp'].min().date()
     max_date = df['timestamp'].max().date()
 
-    # Calculate default start date (1 year back or min_date, whichever is later)
-    default_start = max(min_date, max_date - timedelta(days=365))
-
+    # Default to full date range to show all data
     date_range = st.sidebar.date_input(
         "Select Date Range",
-        value=(default_start, max_date),
+        value=(min_date, max_date),
         min_value=min_date,
         max_value=max_date
     )
