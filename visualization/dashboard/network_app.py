@@ -12,6 +12,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import tempfile
 import os
+import hashlib
+import time
 from collections import Counter
 import itertools
 from typing import Dict, Optional, Tuple
@@ -36,7 +38,7 @@ def load_complaint_data():
     st.success(f"✅ Loaded {len(df):,} complaints from {csv_path}")
     return df
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def build_complaint_network(df: pd.DataFrame, min_weight: int = 5):
     """Build complaint type co-occurrence network"""
 
@@ -77,7 +79,7 @@ def build_complaint_network(df: pd.DataFrame, min_weight: int = 5):
 
     return G
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def build_organization_network(df: pd.DataFrame):
     """Build organization collaboration network (memory-efficient)"""
 
@@ -406,7 +408,7 @@ class NetworkAnalyzer:
         plt.tight_layout()
         return fig
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def detect_communities(_G: nx.Graph):
     """Detect communities using greedy modularity"""
     try:
@@ -582,7 +584,13 @@ def main():
                 with open(html_file, 'r', encoding='utf-8') as f:
                     html_content = f.read()
 
-                st.components.v1.html(html_content, height=800)
+                # Inject unique comment to force Streamlit to re-render when parameters change
+                # This ensures the visualization updates when sliders change
+                viz_params = f"{layout_option}_{centrality_option}_{scale_factor}_{node_spacing}_{node_size_range}_{font_size}_{edge_width}_{show_edges}_{show_communities}_{time.time()}"
+                unique_id = hashlib.md5(viz_params.encode()).hexdigest()
+                html_content = html_content.replace('</body>', f'<!-- viz-id: {unique_id} --></body>')
+
+                st.components.v1.html(html_content, height=800, scrolling=True)
                 os.unlink(html_file)
 
     # Analysis tab
