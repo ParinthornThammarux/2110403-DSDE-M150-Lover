@@ -195,6 +195,26 @@ class NetworkVisualizer:
         # Create visualization graph
         G_vis = self.G.copy()
 
+        # Normalize edge weights for visualization (scale to 0.5-3 range)
+        if len(G_vis.edges()) > 0:
+            edge_weights = [G_vis[u][v].get('weight', 1) for u, v in G_vis.edges()]
+            if edge_weights:
+                min_weight = min(edge_weights)
+                max_weight = max(edge_weights)
+
+                # Scale weights to reasonable range for visualization
+                if max_weight > min_weight:
+                    for u, v in G_vis.edges():
+                        original_weight = G_vis[u][v].get('weight', 1)
+                        # Scale to 0.5-3 range, multiply by edge_width_scale
+                        normalized = 0.5 + (original_weight - min_weight) / (max_weight - min_weight) * 2.5
+                        G_vis[u][v]['weight'] = normalized * edge_width_scale
+                        # Store original weight in title
+                        G_vis[u][v]['title'] = f"Co-occurrences: {original_weight}"
+                else:
+                    for u, v in G_vis.edges():
+                        G_vis[u][v]['weight'] = edge_width_scale
+
         # Prepare color map for communities
         if communities:
             unique_communities = sorted(set(communities.values()))
@@ -235,7 +255,7 @@ class NetworkVisualizer:
         # Disable physics
         nt.toggle_physics(False)
 
-        # Set options
+        # Set options (edge width is set per-edge above)
         nt.set_options("""
         {
             "nodes": {
@@ -246,7 +266,6 @@ class NetworkVisualizer:
             },
             "edges": {
                 "color": {"color": "#666666"},
-                "width": %f,
                 "smooth": {
                     "type": "continuous",
                     "roundness": 0.5
@@ -268,7 +287,7 @@ class NetworkVisualizer:
                 "maxZoom": 3.0
             }
         }
-        """ % (font_size, edge_width_scale, str(not show_edges).lower()))
+        """ % (font_size, str(not show_edges).lower()))
 
         with tempfile.NamedTemporaryFile(delete=False, suffix='.html', mode='w', encoding='utf-8') as tmp:
             nt.save_graph(tmp.name)
@@ -497,11 +516,12 @@ def main():
             )
 
             edge_width = st.slider(
-                "Edge Width",
-                min_value=0.5,
-                max_value=5.0,
-                value=1.5,
-                step=0.5
+                "Edge Width Scale",
+                min_value=0.1,
+                max_value=2.0,
+                value=0.5,
+                step=0.1,
+                help="Scales the normalized edge thickness (edges are auto-normalized based on weights)"
             )
 
             show_edges = st.toggle("Show Edges", value=True)
