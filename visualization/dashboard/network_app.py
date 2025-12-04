@@ -564,10 +564,17 @@ def main():
             with col3:
                 st.metric("Density", f"{nx.density(G):.3f}")
 
+            # Show current visualization settings
+            st.caption(f"📊 Layout: {layout_option} | Node size by: {centrality_option} | "
+                      f"Graph size: {scale_factor}px | Edge width: {edge_width}")
+
             # Create visualization
             visualizer = NetworkVisualizer(G)
 
-            with st.spinner("Creating interactive visualization..."):
+            # Create unique key to force re-render
+            viz_state_key = f"{layout_option}_{centrality_option}_{scale_factor}_{node_spacing}_{node_size_range}_{font_size}_{edge_width}_{show_edges}"
+
+            with st.spinner("🔄 Generating network visualization..."):
                 html_file = visualizer.create_interactive_network(
                     communities=communities,
                     layout=layout_option,
