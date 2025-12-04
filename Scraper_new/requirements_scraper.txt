@@ -1,0 +1,35 @@
+# Bangkok Data Scraper - Python Dependencies
+
+# Core
+requests>=2.32.0
+beautifulsoup4>=4.12.2
+lxml>=5.0.0
+pandas>=2.1.4
+numpy>=1.26.0,<2.6
+
+# Web Scraping
+selenium>=4.16.0
+scrapy>=2.11.0
+httpx>=0.27.0
+
+# Social Media / NLP
+textblob>=0.17.1
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+tqdm>=4.66.1
+
+# Logging
+loguru>=0.7.2
+
+# Optional (for advanced features)
+pillow>=10.3.0,<12  # Image processing (compatible with streamlit)
+nltk>=3.8.1  # Natural language processing
+
+# Database (if saving to database)
+sqlalchemy>=2.0.23
+pymongo>=4.6.1
+
+# Testing
+pytest>=7.4.3

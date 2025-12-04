@@ -1,0 +1,498 @@
+[2025-12-04 13:52:50,109] INFO - ================================================================================
+[2025-12-04 13:52:50,110] INFO - MEA POWER OUTAGE SCRAPER V2 (DAY-BASED RECORDS)
+[2025-12-04 13:52:50,110] INFO - ================================================================================
+[2025-12-04 13:52:50,110] INFO - Max pages: 1
+[2025-12-04 13:52:50,110] INFO - Output: test_by_day.csv
+[2025-12-04 13:52:50,110] INFO - Debug mode: False
+[2025-12-04 13:52:50,110] INFO - ================================================================================
+[2025-12-04 13:52:50,112] INFO - Starting MEA power outage scraper V2 (day-based)...
+[2025-12-04 13:52:51,366] INFO - Scraping page 1: https://www.mea.or.th/en/public-relations/power-outage-notifications/news
+[2025-12-04 13:52:56,184] INFO - Found 24 outage announcements on page 1
+[2025-12-04 13:53:13,321] INFO -   Extracted 1 day records from announcement 5
+[2025-12-04 13:53:58,478] INFO -   Extracted 1 day records from announcement 18
+[2025-12-04 13:54:19,300] INFO - Total day records collected: 2
+[2025-12-04 13:54:21,322] INFO - Reached maximum pages limit: 1
+[2025-12-04 13:54:23,489] INFO - Scraping complete. Total day records: 2
+[2025-12-04 13:54:23,534] INFO - [OK] Saved 2 day records to data\external\scraped\test_by_day.csv
+[2025-12-04 13:54:23,534] INFO - 
+Scraping completed in 93.42 seconds (1.56 minutes)
+[2025-12-04 13:54:23,534] INFO - Total day records: 2
+[2025-12-04 13:54:23,534] INFO - 
+Done!
+[2025-12-04 13:55:32,023] INFO - ================================================================================
+[2025-12-04 13:55:32,023] INFO - MEA POWER OUTAGE SCRAPER V2 (DAY-BASED RECORDS)
+[2025-12-04 13:55:32,023] INFO - ================================================================================
+[2025-12-04 13:55:32,023] INFO - Max pages: 1
+[2025-12-04 13:55:32,023] INFO - Output: test_by_day_v2.csv
+[2025-12-04 13:55:32,023] INFO - Debug mode: False
+[2025-12-04 13:55:32,023] INFO - ================================================================================
+[2025-12-04 13:55:32,024] INFO - Starting MEA power outage scraper V2 (day-based)...
+[2025-12-04 13:55:33,164] INFO - Scraping page 1: https://www.mea.or.th/en/public-relations/power-outage-notifications/news
+[2025-12-04 13:55:38,566] INFO - Found 24 outage announcements on page 1
+[2025-12-04 13:55:41,949] INFO -   Extracted 6 day records from announcement 1
+[2025-12-04 13:55:45,451] INFO -   Extracted 4 day records from announcement 2
+[2025-12-04 13:55:49,275] INFO -   Extracted 6 day records from announcement 3
+[2025-12-04 13:55:52,710] INFO -   Extracted 6 day records from announcement 4
+[2025-12-04 13:55:56,149] INFO -   Extracted 6 day records from announcement 5
+[2025-12-04 13:55:59,474] INFO -   Extracted 6 day records from announcement 6
+[2025-12-04 13:56:02,863] INFO -   Extracted 5 day records from announcement 7
+[2025-12-04 13:56:10,058] INFO -   Extracted 6 day records from announcement 9
+[2025-12-04 13:56:13,592] INFO -   Extracted 5 day records from announcement 10
+[2025-12-04 13:56:17,016] INFO -   Extracted 4 day records from announcement 11
+[2025-12-04 13:56:23,730] INFO -   Extracted 6 day records from announcement 13
+[2025-12-04 13:56:30,885] INFO -   Extracted 6 day records from announcement 15
+[2025-12-04 13:56:34,502] INFO -   Extracted 2 day records from announcement 16
+[2025-12-04 13:56:41,476] INFO -   Extracted 6 day records from announcement 18
+[2025-12-04 13:56:45,020] INFO -   Extracted 5 day records from announcement 19
+[2025-12-04 13:56:48,448] INFO -   Extracted 6 day records from announcement 20
+[2025-12-04 13:56:55,959] INFO -   Extracted 5 day records from announcement 22
+[2025-12-04 13:56:59,223] INFO -   Extracted 4 day records from announcement 23
+[2025-12-04 13:57:02,846] INFO -   Extracted 6 day records from announcement 24
+[2025-12-04 13:57:02,846] INFO - Total day records collected: 100
+[2025-12-04 13:57:04,866] INFO - Reached maximum pages limit: 1
+[2025-12-04 13:57:06,989] INFO - Scraping complete. Total day records: 100
+[2025-12-04 13:57:07,003] INFO - [OK] Saved 100 day records to data\external\scraped\test_by_day_v2.csv
+[2025-12-04 13:57:07,003] INFO - 
+Scraping completed in 94.98 seconds (1.58 minutes)
+[2025-12-04 13:57:07,003] INFO - Total day records: 100
+[2025-12-04 13:57:07,004] INFO - 
+Done!
+[2025-12-04 14:11:39,352] INFO - ================================================================================
+[2025-12-04 14:11:39,352] INFO - MEA POWER OUTAGE SCRAPER V2 (DAY-BASED RECORDS)
+[2025-12-04 14:11:39,352] INFO - ================================================================================
+[2025-12-04 14:11:39,353] INFO - Max pages: 1
+[2025-12-04 14:11:39,353] INFO - Output: test_final.csv
+[2025-12-04 14:11:39,353] INFO - Debug mode: False
+[2025-12-04 14:11:39,353] INFO - ================================================================================
+[2025-12-04 14:11:39,354] INFO - Starting MEA power outage scraper V2 (day-based)...
+[2025-12-04 14:11:40,707] INFO - Scraping page 1: https://www.mea.or.th/en/public-relations/power-outage-notifications/news
+[2025-12-04 14:11:49,087] INFO - Found 24 outage announcements on page 1
+[2025-12-04 14:11:52,771] INFO -   Extracted 6 day records from announcement 1
+[2025-12-04 14:11:56,305] INFO -   Extracted 4 day records from announcement 2
+[2025-12-04 14:11:59,870] INFO -   Extracted 6 day records from announcement 3
+[2025-12-04 14:12:03,505] INFO -   Extracted 6 day records from announcement 4
+[2025-12-04 14:12:07,133] INFO -   Extracted 6 day records from announcement 5
+[2025-12-04 14:12:10,703] INFO -   Extracted 6 day records from announcement 6
+[2025-12-04 14:12:14,428] INFO -   Extracted 5 day records from announcement 7
+[2025-12-04 14:12:21,682] INFO -   Extracted 6 day records from announcement 9
+[2025-12-04 14:12:25,371] INFO -   Extracted 5 day records from announcement 10
+[2025-12-04 14:12:28,943] INFO -   Extracted 4 day records from announcement 11
+[2025-12-04 14:12:36,128] INFO -   Extracted 6 day records from announcement 13
+[2025-12-04 14:12:43,086] INFO -   Extracted 6 day records from announcement 15
+[2025-12-04 14:12:46,703] INFO -   Extracted 2 day records from announcement 16
+[2025-12-04 14:12:53,893] INFO -   Extracted 6 day records from announcement 18
+[2025-12-04 14:12:57,539] INFO -   Extracted 5 day records from announcement 19
+[2025-12-04 14:13:01,210] INFO -   Extracted 6 day records from announcement 20
+[2025-12-04 14:13:08,437] INFO -   Extracted 5 day records from announcement 22
+[2025-12-04 14:13:12,016] INFO -   Extracted 4 day records from announcement 23
+[2025-12-04 14:13:15,835] INFO -   Extracted 6 day records from announcement 24
+[2025-12-04 14:13:15,835] INFO - Total day records collected: 100
+[2025-12-04 14:13:17,884] INFO - Reached maximum pages limit: 1
+[2025-12-04 14:13:20,106] INFO - Scraping complete. Total day records: 100
+[2025-12-04 14:13:20,123] INFO - [OK] Saved 100 day records to data\external\scraped\test_final.csv
+[2025-12-04 14:13:20,123] INFO - 
+Scraping completed in 100.77 seconds (1.68 minutes)
+[2025-12-04 14:13:20,123] INFO - Total day records: 100
+[2025-12-04 14:13:20,123] INFO - 
+Done!
+[2025-12-04 14:34:55,352] INFO - ================================================================================
+[2025-12-04 14:34:55,353] INFO - MEA POWER OUTAGE SCRAPER V2 (DAY-BASED RECORDS - BATCH MODE)
+[2025-12-04 14:34:55,353] INFO - ================================================================================
+[2025-12-04 14:34:55,353] INFO - Page range: Stop: page 2
+[2025-12-04 14:34:55,354] INFO - Workers: 12
+[2025-12-04 14:34:55,354] INFO - Output mode: Page batches + combined file
+[2025-12-04 14:34:55,354] INFO - Debug mode: False
+[2025-12-04 14:34:55,354] INFO - ================================================================================
+[2025-12-04 14:34:55,355] INFO - Starting MEA power outage scraper V2 (day-based) with 12 workers...
+[2025-12-04 14:34:55,355] INFO - Will stop at page 2
+[2025-12-04 14:34:57,290] INFO - Scraping page 1: https://www.mea.or.th/en/public-relations/power-outage-notifications/news
+[2025-12-04 14:35:05,907] INFO - Found 24 outage announcements on page 1
+[2025-12-04 14:35:16,052] INFO -   ✓ Page 1, Announcement 3: Extracted 6 day records
+[2025-12-04 14:35:16,394] INFO -   ✓ Page 1, Announcement 7: Extracted 5 day records
+[2025-12-04 14:35:16,548] INFO -   ✓ Page 1, Announcement 2: Extracted 4 day records
+[2025-12-04 14:35:16,625] INFO -   ✓ Page 1, Announcement 6: Extracted 6 day records
+[2025-12-04 14:35:16,812] INFO -   ✓ Page 1, Announcement 1: Extracted 6 day records
+[2025-12-04 14:35:17,145] INFO -   ✓ Page 1, Announcement 10: Extracted 5 day records
+[2025-12-04 14:35:17,470] INFO -   ✓ Page 1, Announcement 11: Extracted 4 day records
+[2025-12-04 14:35:17,545] INFO -   ✓ Page 1, Announcement 5: Extracted 6 day records
+[2025-12-04 14:35:17,640] INFO -   ✓ Page 1, Announcement 9: Extracted 6 day records
+[2025-12-04 14:35:17,717] INFO -   ✓ Page 1, Announcement 4: Extracted 6 day records
+[2025-12-04 14:35:25,189] INFO -   ✓ Page 1, Announcement 13: Extracted 6 day records
+[2025-12-04 14:35:25,281] INFO -   ✓ Page 1, Announcement 15: Extracted 6 day records
+[2025-12-04 14:35:25,777] INFO -   ✓ Page 1, Announcement 16: Extracted 2 day records
+[2025-12-04 14:35:26,182] INFO -   ✓ Page 1, Announcement 19: Extracted 5 day records
+[2025-12-04 14:35:27,017] INFO -   ✓ Page 1, Announcement 18: Extracted 6 day records
+[2025-12-04 14:35:27,017] INFO -   ✓ Page 1, Announcement 22: Extracted 5 day records
+[2025-12-04 14:35:27,297] INFO -   ✓ Page 1, Announcement 24: Extracted 6 day records
+[2025-12-04 14:35:27,405] INFO -   ✓ Page 1, Announcement 23: Extracted 4 day records
+[2025-12-04 14:35:31,380] INFO -   ✓ Page 1, Announcement 20: Extracted 6 day records
+[2025-12-04 14:35:31,382] INFO - Page 1 complete: 100 day records
+[2025-12-04 14:35:31,398] INFO - [OK] Saved page 1 batch: 100 day records to data\external\scraped\mea_power_outages_page_001.csv
+[2025-12-04 14:35:33,436] INFO - Scraping page 2: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=2
+[2025-12-04 14:35:38,956] INFO - Found 24 outage announcements on page 2
+[2025-12-04 14:35:49,010] INFO -   ✓ Page 2, Announcement 5: Extracted 2 day records
+[2025-12-04 14:35:49,354] INFO -   ✓ Page 2, Announcement 1: Extracted 6 day records
+[2025-12-04 14:35:49,370] INFO -   ✓ Page 2, Announcement 7: Extracted 6 day records
+[2025-12-04 14:35:49,525] INFO -   ✓ Page 2, Announcement 12: Extracted 3 day records
+[2025-12-04 14:35:49,651] INFO -   ✓ Page 2, Announcement 4: Extracted 6 day records
+[2025-12-04 14:35:50,774] INFO -   ✓ Page 2, Announcement 2: Extracted 5 day records
+[2025-12-04 14:35:50,777] INFO -   ✓ Page 2, Announcement 3: Extracted 6 day records
+[2025-12-04 14:35:50,925] INFO -   ✓ Page 2, Announcement 8: Extracted 6 day records
+[2025-12-04 14:35:50,929] INFO -   ✓ Page 2, Announcement 11: Extracted 6 day records
+[2025-12-04 14:35:58,702] INFO -   ✓ Page 2, Announcement 15: Extracted 6 day records
+[2025-12-04 14:35:58,718] INFO -   ✓ Page 2, Announcement 14: Extracted 1 day records
+[2025-12-04 14:35:58,874] INFO -   ✓ Page 2, Announcement 16: Extracted 6 day records
+[2025-12-04 14:35:59,233] INFO -   ✓ Page 2, Announcement 20: Extracted 6 day records
+[2025-12-04 14:35:59,979] INFO -   ✓ Page 2, Announcement 19: Extracted 5 day records
+[2025-12-04 14:36:00,120] INFO -   ✓ Page 2, Announcement 18: Extracted 4 day records
+[2025-12-04 14:36:00,134] INFO -   ✓ Page 2, Announcement 23: Extracted 5 day records
+[2025-12-04 14:36:00,150] INFO -   ✓ Page 2, Announcement 21: Extracted 6 day records
+[2025-12-04 14:36:00,710] INFO -   ✓ Page 2, Announcement 22: Extracted 4 day records
+[2025-12-04 14:36:00,850] INFO -   ✓ Page 2, Announcement 24: Extracted 5 day records
+[2025-12-04 14:36:00,851] INFO - Page 2 complete: 94 day records
+[2025-12-04 14:36:00,859] INFO - [OK] Saved page 2 batch: 94 day records to data\external\scraped\mea_power_outages_page_002.csv
+[2025-12-04 14:36:02,906] INFO - Reached stop page: 2
+[2025-12-04 14:36:05,095] INFO - Scraping complete. Total pages: 2, Total day records: 194
+[2025-12-04 14:36:05,109] INFO - [OK] Saved combined file: 194 day records to data\external\scraped\mea_power_outages_by_day_combined.csv
+[2025-12-04 14:36:05,110] INFO - 
+================================================================================
+[2025-12-04 14:36:05,110] INFO - Scraping completed in 69.75 seconds (1.16 minutes)
+[2025-12-04 14:36:05,110] INFO - Total pages scraped: 2
+[2025-12-04 14:36:05,110] INFO - Total day records: 194
+[2025-12-04 14:36:05,111] INFO - Average records per page: 97.0
+[2025-12-04 14:36:05,111] INFO - Output directory: data\external\scraped
+[2025-12-04 14:36:05,112] INFO - ================================================================================
+[2025-12-04 14:36:05,112] INFO - 
+Done!
+[2025-12-04 14:40:35,970] INFO - ================================================================================
+[2025-12-04 14:40:35,970] INFO - MEA POWER OUTAGE SCRAPER V2 (DAY-BASED RECORDS - BATCH MODE)
+[2025-12-04 14:40:35,970] INFO - ================================================================================
+[2025-12-04 14:40:35,970] INFO - Page range: Start: page 3, Stop: page 13
+[2025-12-04 14:40:35,971] INFO - Workers: 12
+[2025-12-04 14:40:35,971] INFO - Output mode: Page batches + combined file
+[2025-12-04 14:40:35,972] INFO - Debug mode: False
+[2025-12-04 14:40:35,972] INFO - ================================================================================
+[2025-12-04 14:40:35,973] INFO - Starting MEA power outage scraper V2 (day-based) with 12 workers...
+[2025-12-04 14:40:35,973] INFO - Starting from page 3
+[2025-12-04 14:40:35,973] INFO - Will stop at page 13
+[2025-12-04 14:40:37,323] INFO - Scraping page 3: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=3
+[2025-12-04 14:40:45,861] INFO - Found 24 outage announcements on page 3
+[2025-12-04 14:40:54,852] INFO -   ✓ Page 3, Announcement 1: Extracted 3 day records
+[2025-12-04 14:40:55,460] INFO -   ✓ Page 3, Announcement 2: Extracted 5 day records
+[2025-12-04 14:40:55,616] INFO -   ✓ Page 3, Announcement 3: Extracted 7 day records
+[2025-12-04 14:40:56,254] INFO -   ✓ Page 3, Announcement 6: Extracted 3 day records
+[2025-12-04 14:40:56,361] INFO -   ✓ Page 3, Announcement 8: Extracted 6 day records
+[2025-12-04 14:40:56,393] INFO -   ✓ Page 3, Announcement 11: Extracted 7 day records
+[2025-12-04 14:40:56,471] INFO -   ✓ Page 3, Announcement 12: Extracted 7 day records
+[2025-12-04 14:40:56,635] INFO -   ✓ Page 3, Announcement 4: Extracted 6 day records
+[2025-12-04 14:40:56,636] INFO -   ✓ Page 3, Announcement 9: Extracted 5 day records
+[2025-12-04 14:40:56,640] INFO -   ✓ Page 3, Announcement 7: Extracted 6 day records
+[2025-12-04 14:40:56,739] INFO -   ✓ Page 3, Announcement 10: Extracted 7 day records
+[2025-12-04 14:40:57,574] INFO -   ✓ Page 3, Announcement 5: Extracted 7 day records
+[2025-12-04 14:41:04,475] INFO -   ✓ Page 3, Announcement 14: Extracted 7 day records
+[2025-12-04 14:41:04,491] INFO -   ✓ Page 3, Announcement 13: Extracted 5 day records
+[2025-12-04 14:41:04,492] INFO -   ✓ Page 3, Announcement 15: Extracted 7 day records
+[2025-12-04 14:41:04,507] INFO -   ✓ Page 3, Announcement 16: Extracted 7 day records
+[2025-12-04 14:41:05,144] INFO -   ✓ Page 3, Announcement 17: Extracted 6 day records
+[2025-12-04 14:41:05,346] INFO -   ✓ Page 3, Announcement 19: Extracted 7 day records
+[2025-12-04 14:41:05,423] INFO -   ✓ Page 3, Announcement 18: Extracted 6 day records
+[2025-12-04 14:41:06,295] INFO -   ✓ Page 3, Announcement 22: Extracted 7 day records
+[2025-12-04 14:41:06,342] INFO -   ✓ Page 3, Announcement 21: Extracted 7 day records
+[2025-12-04 14:41:06,420] INFO -   ✓ Page 3, Announcement 20: Extracted 7 day records
+[2025-12-04 14:41:07,024] INFO -   ✓ Page 3, Announcement 23: Extracted 7 day records
+[2025-12-04 14:41:07,166] INFO -   ✓ Page 3, Announcement 24: Extracted 7 day records
+[2025-12-04 14:41:07,167] INFO - Page 3 complete: 149 day records
+[2025-12-04 14:41:07,186] INFO - [OK] Saved page 3 batch: 149 day records to data\external\scraped\mea_power_outages_page_003.csv
+[2025-12-04 14:41:09,232] INFO - Scraping page 4: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=4
+[2025-12-04 14:41:14,665] INFO - Found 24 outage announcements on page 4
+[2025-12-04 14:41:25,056] INFO -   ✓ Page 4, Announcement 4: Extracted 6 day records
+[2025-12-04 14:41:25,366] INFO -   ✓ Page 4, Announcement 2: Extracted 6 day records
+[2025-12-04 14:41:25,459] INFO -   ✓ Page 4, Announcement 6: Extracted 7 day records
+[2025-12-04 14:41:25,491] INFO -   ✓ Page 4, Announcement 8: Extracted 6 day records
+[2025-12-04 14:41:25,864] INFO -   ✓ Page 4, Announcement 11: Extracted 6 day records
+[2025-12-04 14:41:25,896] INFO -   ✓ Page 4, Announcement 9: Extracted 7 day records
+[2025-12-04 14:41:25,899] INFO -   ✓ Page 4, Announcement 3: Extracted 7 day records
+[2025-12-04 14:41:26,064] INFO -   ✓ Page 4, Announcement 12: Extracted 7 day records
+[2025-12-04 14:41:26,335] INFO -   ✓ Page 4, Announcement 7: Extracted 5 day records
+[2025-12-04 14:41:26,350] INFO -   ✓ Page 4, Announcement 10: Extracted 7 day records
+[2025-12-04 14:41:26,423] INFO -   ✓ Page 4, Announcement 1: Extracted 5 day records
+[2025-12-04 14:41:26,501] INFO -   ✓ Page 4, Announcement 5: Extracted 6 day records
+[2025-12-04 14:41:33,754] INFO -   ✓ Page 4, Announcement 13: Extracted 4 day records
+[2025-12-04 14:41:34,221] INFO -   ✓ Page 4, Announcement 14: Extracted 7 day records
+[2025-12-04 14:41:34,221] INFO -   ✓ Page 4, Announcement 16: Extracted 7 day records
+[2025-12-04 14:41:34,390] INFO -   ✓ Page 4, Announcement 15: Extracted 6 day records
+[2025-12-04 14:41:35,419] INFO -   ✓ Page 4, Announcement 17: Extracted 7 day records
+[2025-12-04 14:41:35,574] INFO -   ✓ Page 4, Announcement 19: Extracted 5 day records
+[2025-12-04 14:41:35,886] INFO -   ✓ Page 4, Announcement 18: Extracted 6 day records
+[2025-12-04 14:41:36,058] INFO -   ✓ Page 4, Announcement 20: Extracted 7 day records
+[2025-12-04 14:41:36,728] INFO -   ✓ Page 4, Announcement 24: Extracted 6 day records
+[2025-12-04 14:41:36,789] INFO -   ✓ Page 4, Announcement 21: Extracted 6 day records
+[2025-12-04 14:41:36,869] INFO -   ✓ Page 4, Announcement 23: Extracted 6 day records
+[2025-12-04 14:41:36,914] INFO -   ✓ Page 4, Announcement 22: Extracted 7 day records
+[2025-12-04 14:41:36,916] INFO - Page 4 complete: 149 day records
+[2025-12-04 14:41:36,926] INFO - [OK] Saved page 4 batch: 149 day records to data\external\scraped\mea_power_outages_page_004.csv
+[2025-12-04 14:41:38,963] INFO - Scraping page 5: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=5
+[2025-12-04 14:41:44,029] INFO - Found 24 outage announcements on page 5
+[2025-12-04 14:41:54,620] INFO -   ✓ Page 5, Announcement 6: Extracted 7 day records
+[2025-12-04 14:41:54,866] INFO -   ✓ Page 5, Announcement 5: Extracted 5 day records
+[2025-12-04 14:41:54,866] INFO -   ✓ Page 5, Announcement 9: Extracted 7 day records
+[2025-12-04 14:41:54,991] INFO -   ✓ Page 5, Announcement 1: Extracted 7 day records
+[2025-12-04 14:41:55,069] INFO -   ✓ Page 5, Announcement 7: Extracted 6 day records
+[2025-12-04 14:41:55,070] INFO -   ✓ Page 5, Announcement 3: Extracted 6 day records
+[2025-12-04 14:41:55,195] INFO -   ✓ Page 5, Announcement 8: Extracted 7 day records
+[2025-12-04 14:41:55,270] INFO -   ✓ Page 5, Announcement 11: Extracted 6 day records
+[2025-12-04 14:41:55,442] INFO -   ✓ Page 5, Announcement 4: Extracted 4 day records
+[2025-12-04 14:41:55,459] INFO -   ✓ Page 5, Announcement 2: Extracted 6 day records
+[2025-12-04 14:41:55,521] INFO -   ✓ Page 5, Announcement 10: Extracted 7 day records
+[2025-12-04 14:41:55,601] INFO -   ✓ Page 5, Announcement 12: Extracted 7 day records
+[2025-12-04 14:42:05,364] INFO -   ✓ Page 5, Announcement 13: Extracted 7 day records
+[2025-12-04 14:42:05,488] INFO -   ✓ Page 5, Announcement 16: Extracted 7 day records
+[2025-12-04 14:42:05,536] INFO -   ✓ Page 5, Announcement 14: Extracted 7 day records
+[2025-12-04 14:42:05,952] INFO -   ✓ Page 5, Announcement 15: Extracted 7 day records
+[2025-12-04 14:42:05,984] INFO -   ✓ Page 5, Announcement 18: Extracted 6 day records
+[2025-12-04 14:42:06,030] INFO -   ✓ Page 5, Announcement 17: Extracted 6 day records
+[2025-12-04 14:42:06,906] INFO -   ✓ Page 5, Announcement 22: Extracted 6 day records
+[2025-12-04 14:42:07,048] INFO -   ✓ Page 5, Announcement 19: Extracted 7 day records
+[2025-12-04 14:42:07,142] INFO -   ✓ Page 5, Announcement 23: Extracted 7 day records
+[2025-12-04 14:42:07,420] INFO -   ✓ Page 5, Announcement 21: Extracted 5 day records
+[2025-12-04 14:42:07,452] INFO -   ✓ Page 5, Announcement 24: Extracted 7 day records
+[2025-12-04 14:42:07,467] INFO -   ✓ Page 5, Announcement 20: Extracted 7 day records
+[2025-12-04 14:42:07,469] INFO - Page 5 complete: 154 day records
+[2025-12-04 14:42:07,479] INFO - [OK] Saved page 5 batch: 154 day records to data\external\scraped\mea_power_outages_page_005.csv
+[2025-12-04 14:42:09,513] INFO - Scraping page 6: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=6
+[2025-12-04 14:42:14,737] INFO - Found 24 outage announcements on page 6
+[2025-12-04 14:42:23,999] INFO -   ✓ Page 6, Announcement 3: Extracted 6 day records
+[2025-12-04 14:42:24,155] INFO -   ✓ Page 6, Announcement 2: Extracted 4 day records
+[2025-12-04 14:42:24,465] INFO -   ✓ Page 6, Announcement 9: Extracted 6 day records
+[2025-12-04 14:42:24,667] INFO -   ✓ Page 6, Announcement 4: Extracted 7 day records
+[2025-12-04 14:42:24,869] INFO -   ✓ Page 6, Announcement 12: Extracted 7 day records
+[2025-12-04 14:42:25,119] INFO -   ✓ Page 6, Announcement 8: Extracted 7 day records
+[2025-12-04 14:42:25,167] INFO -   ✓ Page 6, Announcement 1: Extracted 7 day records
+[2025-12-04 14:42:25,307] INFO -   ✓ Page 6, Announcement 6: Extracted 5 day records
+[2025-12-04 14:42:25,417] INFO -   ✓ Page 6, Announcement 7: Extracted 5 day records
+[2025-12-04 14:42:25,479] INFO -   ✓ Page 6, Announcement 10: Extracted 7 day records
+[2025-12-04 14:42:25,652] INFO -   ✓ Page 6, Announcement 11: Extracted 5 day records
+[2025-12-04 14:42:25,779] INFO -   ✓ Page 6, Announcement 5: Extracted 5 day records
+[2025-12-04 14:42:33,112] INFO -   ✓ Page 6, Announcement 15: Extracted 6 day records
+[2025-12-04 14:42:33,113] INFO -   ✓ Page 6, Announcement 14: Extracted 6 day records
+[2025-12-04 14:42:33,113] INFO -   ✓ Page 6, Announcement 16: Extracted 7 day records
+[2025-12-04 14:42:33,114] INFO -   ✓ Page 6, Announcement 13: Extracted 6 day records
+[2025-12-04 14:42:33,151] INFO -   ✓ Page 6, Announcement 17: Extracted 7 day records
+[2025-12-04 14:42:34,128] INFO -   ✓ Page 6, Announcement 20: Extracted 7 day records
+[2025-12-04 14:42:34,391] INFO -   ✓ Page 6, Announcement 19: Extracted 7 day records
+[2025-12-04 14:42:34,393] INFO -   ✓ Page 6, Announcement 18: Extracted 6 day records
+[2025-12-04 14:42:35,030] INFO -   ✓ Page 6, Announcement 23: Extracted 7 day records
+[2025-12-04 14:42:35,406] INFO -   ✓ Page 6, Announcement 21: Extracted 6 day records
+[2025-12-04 14:42:35,684] INFO -   ✓ Page 6, Announcement 22: Extracted 6 day records
+[2025-12-04 14:42:35,919] INFO -   ✓ Page 6, Announcement 24: Extracted 5 day records
+[2025-12-04 14:42:35,920] INFO - Page 6 complete: 147 day records
+[2025-12-04 14:42:35,930] INFO - [OK] Saved page 6 batch: 147 day records to data\external\scraped\mea_power_outages_page_006.csv
+[2025-12-04 14:42:37,972] INFO - Scraping page 7: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=7
+[2025-12-04 14:42:43,143] INFO - Found 24 outage announcements on page 7
+[2025-12-04 14:42:52,380] INFO -   ✓ Page 7, Announcement 8: Extracted 5 day records
+[2025-12-04 14:42:52,569] INFO -   ✓ Page 7, Announcement 6: Extracted 6 day records
+[2025-12-04 14:42:52,943] INFO -   ✓ Page 7, Announcement 3: Extracted 7 day records
+[2025-12-04 14:42:52,943] INFO -   ✓ Page 7, Announcement 1: Extracted 7 day records
+[2025-12-04 14:42:53,224] INFO -   ✓ Page 7, Announcement 12: Extracted 6 day records
+[2025-12-04 14:42:53,465] INFO -   ✓ Page 7, Announcement 10: Extracted 6 day records
+[2025-12-04 14:42:53,504] INFO -   ✓ Page 7, Announcement 5: Extracted 7 day records
+[2025-12-04 14:42:53,721] INFO -   ✓ Page 7, Announcement 2: Extracted 7 day records
+[2025-12-04 14:42:53,962] INFO -   ✓ Page 7, Announcement 7: Extracted 5 day records
+[2025-12-04 14:42:53,983] INFO -   ✓ Page 7, Announcement 11: Extracted 6 day records
+[2025-12-04 14:42:54,099] INFO -   ✓ Page 7, Announcement 9: Extracted 5 day records
+[2025-12-04 14:42:54,101] INFO -   ✓ Page 7, Announcement 4: Extracted 7 day records
+[2025-12-04 14:43:01,402] INFO -   ✓ Page 7, Announcement 16: Extracted 5 day records
+[2025-12-04 14:43:01,585] INFO -   ✓ Page 7, Announcement 14: Extracted 4 day records
+[2025-12-04 14:43:01,587] INFO -   ✓ Page 7, Announcement 13: Extracted 6 day records
+[2025-12-04 14:43:01,631] INFO -   ✓ Page 7, Announcement 15: Extracted 6 day records
+[2025-12-04 14:43:01,734] INFO -   ✓ Page 7, Announcement 18: Extracted 4 day records
+[2025-12-04 14:43:03,079] INFO -   ✓ Page 7, Announcement 17: Extracted 7 day records
+[2025-12-04 14:43:03,404] INFO -   ✓ Page 7, Announcement 24: Extracted 7 day records
+[2025-12-04 14:43:03,746] INFO -   ✓ Page 7, Announcement 21: Extracted 6 day records
+[2025-12-04 14:43:03,746] INFO -   ✓ Page 7, Announcement 19: Extracted 7 day records
+[2025-12-04 14:43:03,920] INFO -   ✓ Page 7, Announcement 23: Extracted 6 day records
+[2025-12-04 14:43:03,935] INFO -   ✓ Page 7, Announcement 20: Extracted 7 day records
+[2025-12-04 14:43:04,029] INFO -   ✓ Page 7, Announcement 22: Extracted 5 day records
+[2025-12-04 14:43:04,031] INFO - Page 7 complete: 144 day records
+[2025-12-04 14:43:04,040] INFO - [OK] Saved page 7 batch: 144 day records to data\external\scraped\mea_power_outages_page_007.csv
+[2025-12-04 14:43:06,087] INFO - Scraping page 8: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=8
+[2025-12-04 14:43:11,568] INFO - Found 24 outage announcements on page 8
+[2025-12-04 14:43:20,568] INFO -   ✓ Page 8, Announcement 1: Extracted 6 day records
+[2025-12-04 14:43:21,003] INFO -   ✓ Page 8, Announcement 11: Extracted 6 day records
+[2025-12-04 14:43:21,204] INFO -   ✓ Page 8, Announcement 5: Extracted 5 day records
+[2025-12-04 14:43:21,380] INFO -   ✓ Page 8, Announcement 9: Extracted 5 day records
+[2025-12-04 14:43:21,384] INFO -   ✓ Page 8, Announcement 8: Extracted 7 day records
+[2025-12-04 14:43:21,703] INFO -   ✓ Page 8, Announcement 7: Extracted 5 day records
+[2025-12-04 14:43:21,781] INFO -   ✓ Page 8, Announcement 12: Extracted 5 day records
+[2025-12-04 14:43:21,906] INFO -   ✓ Page 8, Announcement 10: Extracted 5 day records
+[2025-12-04 14:43:21,922] INFO -   ✓ Page 8, Announcement 6: Extracted 6 day records
+[2025-12-04 14:43:22,397] INFO -   ✓ Page 8, Announcement 4: Extracted 6 day records
+[2025-12-04 14:43:22,563] INFO -   ✓ Page 8, Announcement 2: Extracted 5 day records
+[2025-12-04 14:43:23,026] INFO -   ✓ Page 8, Announcement 3: Extracted 6 day records
+[2025-12-04 14:43:29,500] INFO -   ✓ Page 8, Announcement 14: Extracted 7 day records
+[2025-12-04 14:43:29,547] INFO -   ✓ Page 8, Announcement 13: Extracted 5 day records
+[2025-12-04 14:43:29,562] INFO -   ✓ Page 8, Announcement 15: Extracted 4 day records
+[2025-12-04 14:43:29,640] INFO -   ✓ Page 8, Announcement 16: Extracted 5 day records
+[2025-12-04 14:43:30,687] INFO -   ✓ Page 8, Announcement 19: Extracted 5 day records
+[2025-12-04 14:43:30,937] INFO -   ✓ Page 8, Announcement 17: Extracted 5 day records
+[2025-12-04 14:43:31,045] INFO -   ✓ Page 8, Announcement 18: Extracted 7 day records
+[2025-12-04 14:43:31,279] INFO -   ✓ Page 8, Announcement 20: Extracted 7 day records
+[2025-12-04 14:43:31,280] INFO -   ✓ Page 8, Announcement 21: Extracted 7 day records
+[2025-12-04 14:43:32,287] INFO -   ✓ Page 8, Announcement 23: Extracted 5 day records
+[2025-12-04 14:43:32,602] INFO -   ✓ Page 8, Announcement 22: Extracted 5 day records
+[2025-12-04 14:43:32,709] INFO -   ✓ Page 8, Announcement 24: Extracted 6 day records
+[2025-12-04 14:43:32,712] INFO - Page 8 complete: 135 day records
+[2025-12-04 14:43:32,720] INFO - [OK] Saved page 8 batch: 135 day records to data\external\scraped\mea_power_outages_page_008.csv
+[2025-12-04 14:43:34,758] INFO - Scraping page 9: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=9
+[2025-12-04 14:43:39,850] INFO - Found 24 outage announcements on page 9
+[2025-12-04 14:43:49,139] INFO -   ✓ Page 9, Announcement 3: Extracted 6 day records
+[2025-12-04 14:43:49,261] INFO -   ✓ Page 9, Announcement 1: Extracted 5 day records
+[2025-12-04 14:43:49,262] INFO -   ✓ Page 9, Announcement 4: Extracted 6 day records
+[2025-12-04 14:43:49,418] INFO -   ✓ Page 9, Announcement 5: Extracted 6 day records
+[2025-12-04 14:43:49,713] INFO -   ✓ Page 9, Announcement 6: Extracted 5 day records
+[2025-12-04 14:43:49,745] INFO -   ✓ Page 9, Announcement 12: Extracted 4 day records
+[2025-12-04 14:43:49,994] INFO -   ✓ Page 9, Announcement 2: Extracted 7 day records
+[2025-12-04 14:43:50,245] INFO -   ✓ Page 9, Announcement 7: Extracted 4 day records
+[2025-12-04 14:43:50,255] INFO -   ✓ Page 9, Announcement 11: Extracted 4 day records
+[2025-12-04 14:43:50,399] INFO -   ✓ Page 9, Announcement 9: Extracted 7 day records
+[2025-12-04 14:43:50,477] INFO -   ✓ Page 9, Announcement 10: Extracted 5 day records
+[2025-12-04 14:43:51,594] INFO -   ✓ Page 9, Announcement 8: Extracted 5 day records
+[2025-12-04 14:43:58,202] INFO -   ✓ Page 9, Announcement 13: Extracted 5 day records
+[2025-12-04 14:43:58,203] INFO -   ✓ Page 9, Announcement 15: Extracted 6 day records
+[2025-12-04 14:43:58,337] INFO -   ✓ Page 9, Announcement 14: Extracted 6 day records
+[2025-12-04 14:43:58,372] INFO -   ✓ Page 9, Announcement 17: Extracted 6 day records
+[2025-12-04 14:43:58,622] INFO -   ✓ Page 9, Announcement 16: Extracted 6 day records
+[2025-12-04 14:43:59,339] INFO -   ✓ Page 9, Announcement 18: Extracted 5 day records
+[2025-12-04 14:44:00,198] INFO -   ✓ Page 9, Announcement 19: Extracted 7 day records
+[2025-12-04 14:44:00,228] INFO -   ✓ Page 9, Announcement 21: Extracted 5 day records
+[2025-12-04 14:44:00,399] INFO -   ✓ Page 9, Announcement 22: Extracted 7 day records
+[2025-12-04 14:44:00,399] INFO -   ✓ Page 9, Announcement 20: Extracted 6 day records
+[2025-12-04 14:44:00,541] INFO -   ✓ Page 9, Announcement 23: Extracted 6 day records
+[2025-12-04 14:44:00,697] INFO -   ✓ Page 9, Announcement 24: Extracted 7 day records
+[2025-12-04 14:44:00,698] INFO - Page 9 complete: 136 day records
+[2025-12-04 14:44:00,714] INFO - [OK] Saved page 9 batch: 136 day records to data\external\scraped\mea_power_outages_page_009.csv
+[2025-12-04 14:44:02,754] INFO - Scraping page 10: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=10
+[2025-12-04 14:44:08,297] INFO - Found 24 outage announcements on page 10
+[2025-12-04 14:44:17,311] INFO -   ✓ Page 10, Announcement 2: Extracted 3 day records
+[2025-12-04 14:44:17,559] INFO -   ✓ Page 10, Announcement 8: Extracted 2 day records
+[2025-12-04 14:44:17,995] INFO -   ✓ Page 10, Announcement 6: Extracted 2 day records
+[2025-12-04 14:44:18,322] INFO -   ✓ Page 10, Announcement 1: Extracted 5 day records
+[2025-12-04 14:44:18,461] INFO -   ✓ Page 10, Announcement 10: Extracted 2 day records
+[2025-12-04 14:44:18,477] INFO -   ✓ Page 10, Announcement 5: Extracted 3 day records
+[2025-12-04 14:44:18,609] INFO -   ✓ Page 10, Announcement 4: Extracted 3 day records
+[2025-12-04 14:44:19,034] INFO -   ✓ Page 10, Announcement 3: Extracted 6 day records
+[2025-12-04 14:44:19,235] INFO -   ✓ Page 10, Announcement 9: Extracted 1 day records
+[2025-12-04 14:44:19,374] INFO -   ✓ Page 10, Announcement 7: Extracted 3 day records
+[2025-12-04 14:44:19,375] INFO -   ✓ Page 10, Announcement 12: Extracted 5 day records
+[2025-12-04 14:44:19,484] INFO -   ✓ Page 10, Announcement 11: Extracted 5 day records
+[2025-12-04 14:44:25,447] INFO -   ✓ Page 10, Announcement 13: Extracted 5 day records
+[2025-12-04 14:44:25,923] INFO -   ✓ Page 10, Announcement 15: Extracted 4 day records
+[2025-12-04 14:44:26,462] INFO -   ✓ Page 10, Announcement 14: Extracted 6 day records
+[2025-12-04 14:44:28,321] INFO -   ✓ Page 10, Announcement 17: Extracted 4 day records
+[2025-12-04 14:44:28,476] INFO -   ✓ Page 10, Announcement 21: Extracted 5 day records
+[2025-12-04 14:44:28,644] INFO -   ✓ Page 10, Announcement 24: Extracted 5 day records
+[2025-12-04 14:44:28,908] INFO -   ✓ Page 10, Announcement 20: Extracted 3 day records
+[2025-12-04 14:44:29,920] INFO -   ✓ Page 10, Announcement 22: Extracted 4 day records
+[2025-12-04 14:44:31,965] INFO -   ✓ Page 10, Announcement 23: Extracted 5 day records
+[2025-12-04 14:44:45,073] INFO -   ✓ Page 10, Announcement 18: Extracted 4 day records
+[2025-12-04 14:44:46,786] INFO -   ✓ Page 10, Announcement 19: Extracted 4 day records
+[2025-12-04 14:48:19,837] WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPConnectionPool(host='localhost', port=54862): Read timed out. (read timeout=120)")': /session/56acd018b5adc1e740862cca9c02d032
+[2025-12-04 14:49:22,028] INFO - Page 10 complete: 89 day records
+[2025-12-04 14:49:22,036] INFO - [OK] Saved page 10 batch: 89 day records to data\external\scraped\mea_power_outages_page_010.csv
+[2025-12-04 14:49:24,078] INFO - Scraping page 11: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=11
+[2025-12-04 14:49:32,472] INFO - Found 24 outage announcements on page 11
+[2025-12-04 14:49:42,699] INFO -   ✓ Page 11, Announcement 3: Extracted 6 day records
+[2025-12-04 14:49:42,777] INFO -   ✓ Page 11, Announcement 11: Extracted 4 day records
+[2025-12-04 14:49:43,026] INFO -   ✓ Page 11, Announcement 2: Extracted 7 day records
+[2025-12-04 14:49:43,119] INFO -   ✓ Page 11, Announcement 7: Extracted 7 day records
+[2025-12-04 14:49:43,119] INFO -   ✓ Page 11, Announcement 1: Extracted 6 day records
+[2025-12-04 14:49:43,273] INFO -   ✓ Page 11, Announcement 6: Extracted 7 day records
+[2025-12-04 14:49:43,443] INFO -   ✓ Page 11, Announcement 4: Extracted 7 day records
+[2025-12-04 14:49:43,538] INFO -   ✓ Page 11, Announcement 10: Extracted 5 day records
+[2025-12-04 14:49:43,679] INFO -   ✓ Page 11, Announcement 5: Extracted 7 day records
+[2025-12-04 14:49:43,716] INFO -   ✓ Page 11, Announcement 12: Extracted 3 day records
+[2025-12-04 14:49:43,719] INFO -   ✓ Page 11, Announcement 9: Extracted 5 day records
+[2025-12-04 14:49:43,758] INFO -   ✓ Page 11, Announcement 8: Extracted 7 day records
+[2025-12-04 14:49:50,790] INFO -   ✓ Page 11, Announcement 13: Extracted 3 day records
+[2025-12-04 14:49:50,803] INFO -   ✓ Page 11, Announcement 14: Extracted 6 day records
+[2025-12-04 14:49:51,885] INFO -   ✓ Page 11, Announcement 15: Extracted 6 day records
+[2025-12-04 14:49:52,083] INFO -   ✓ Page 11, Announcement 18: Extracted 7 day records
+[2025-12-04 14:49:52,281] INFO -   ✓ Page 11, Announcement 19: Extracted 7 day records
+[2025-12-04 14:49:53,306] INFO -   ✓ Page 11, Announcement 24: Extracted 6 day records
+[2025-12-04 14:49:53,506] INFO -   ✓ Page 11, Announcement 21: Extracted 6 day records
+[2025-12-04 14:49:53,522] INFO -   ✓ Page 11, Announcement 23: Extracted 7 day records
+[2025-12-04 14:49:53,523] INFO -   ✓ Page 11, Announcement 20: Extracted 7 day records
+[2025-12-04 14:49:53,537] INFO -   ✓ Page 11, Announcement 22: Extracted 5 day records
+[2025-12-04 14:49:57,174] INFO -   ✓ Page 11, Announcement 16: Extracted 6 day records
+[2025-12-04 14:49:57,299] INFO -   ✓ Page 11, Announcement 17: Extracted 7 day records
+[2025-12-04 14:49:57,301] INFO - Page 11 complete: 144 day records
+[2025-12-04 14:49:57,309] INFO - [OK] Saved page 11 batch: 144 day records to data\external\scraped\mea_power_outages_page_011.csv
+[2025-12-04 14:49:59,360] INFO - Scraping page 12: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=12
+[2025-12-04 14:50:04,608] INFO - Found 24 outage announcements on page 12
+[2025-12-04 14:50:13,981] INFO -   ✓ Page 12, Announcement 4: Extracted 6 day records
+[2025-12-04 14:50:14,152] INFO -   ✓ Page 12, Announcement 10: Extracted 6 day records
+[2025-12-04 14:50:14,446] INFO -   ✓ Page 12, Announcement 5: Extracted 5 day records
+[2025-12-04 14:50:14,450] INFO -   ✓ Page 12, Announcement 7: Extracted 6 day records
+[2025-12-04 14:50:14,631] INFO -   ✓ Page 12, Announcement 3: Extracted 4 day records
+[2025-12-04 14:50:14,927] INFO -   ✓ Page 12, Announcement 1: Extracted 5 day records
+[2025-12-04 14:50:14,974] INFO -   ✓ Page 12, Announcement 6: Extracted 6 day records
+[2025-12-04 14:50:15,097] INFO -   ✓ Page 12, Announcement 12: Extracted 5 day records
+[2025-12-04 14:50:15,330] INFO -   ✓ Page 12, Announcement 11: Extracted 3 day records
+[2025-12-04 14:50:15,635] INFO -   ✓ Page 12, Announcement 2: Extracted 6 day records
+[2025-12-04 14:50:15,661] INFO -   ✓ Page 12, Announcement 9: Extracted 6 day records
+[2025-12-04 14:50:15,811] INFO -   ✓ Page 12, Announcement 8: Extracted 7 day records
+[2025-12-04 14:50:22,028] INFO -   ✓ Page 12, Announcement 13: Extracted 6 day records
+[2025-12-04 14:50:22,153] INFO -   ✓ Page 12, Announcement 14: Extracted 7 day records
+[2025-12-04 14:50:22,494] INFO -   ✓ Page 12, Announcement 15: Extracted 7 day records
+[2025-12-04 14:50:22,613] INFO -   ✓ Page 12, Announcement 16: Extracted 6 day records
+[2025-12-04 14:50:23,069] INFO -   ✓ Page 12, Announcement 17: Extracted 5 day records
+[2025-12-04 14:50:24,212] INFO -   ✓ Page 12, Announcement 18: Extracted 5 day records
+[2025-12-04 14:50:24,518] INFO -   ✓ Page 12, Announcement 23: Extracted 1 day records
+[2025-12-04 14:50:24,548] INFO -   ✓ Page 12, Announcement 19: Extracted 5 day records
+[2025-12-04 14:50:24,641] INFO -   ✓ Page 12, Announcement 24: Extracted 2 day records
+[2025-12-04 14:50:24,735] INFO -   ✓ Page 12, Announcement 21: Extracted 3 day records
+[2025-12-04 14:50:24,813] INFO -   ✓ Page 12, Announcement 22: Extracted 2 day records
+[2025-12-04 14:50:29,242] INFO -   ✓ Page 12, Announcement 20: Extracted 3 day records
+[2025-12-04 14:50:29,244] INFO - Page 12 complete: 117 day records
+[2025-12-04 14:50:29,252] INFO - [OK] Saved page 12 batch: 117 day records to data\external\scraped\mea_power_outages_page_012.csv
+[2025-12-04 14:50:31,295] INFO - Scraping page 13: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=13
+[2025-12-04 14:50:36,875] INFO - Found 24 outage announcements on page 13
+[2025-12-04 14:50:46,948] INFO -   ✓ Page 13, Announcement 4: Extracted 7 day records
+[2025-12-04 14:50:47,089] INFO -   ✓ Page 13, Announcement 1: Extracted 7 day records
+[2025-12-04 14:50:47,353] INFO -   ✓ Page 13, Announcement 6: Extracted 7 day records
+[2025-12-04 14:50:47,354] INFO -   ✓ Page 13, Announcement 9: Extracted 7 day records
+[2025-12-04 14:50:47,493] INFO -   ✓ Page 13, Announcement 5: Extracted 4 day records
+[2025-12-04 14:50:47,882] INFO -   ✓ Page 13, Announcement 10: Extracted 5 day records
+[2025-12-04 14:50:48,103] INFO -   ✓ Page 13, Announcement 8: Extracted 5 day records
+[2025-12-04 14:50:48,106] INFO -   ✓ Page 13, Announcement 2: Extracted 7 day records
+[2025-12-04 14:50:48,368] INFO -   ✓ Page 13, Announcement 11: Extracted 6 day records
+[2025-12-04 14:50:48,377] INFO -   ✓ Page 13, Announcement 7: Extracted 6 day records
+[2025-12-04 14:50:48,382] INFO -   ✓ Page 13, Announcement 3: Extracted 7 day records
+[2025-12-04 14:50:48,476] INFO -   ✓ Page 13, Announcement 12: Extracted 6 day records
+[2025-12-04 14:50:56,359] INFO -   ✓ Page 13, Announcement 13: Extracted 5 day records
+[2025-12-04 14:50:56,362] INFO -   ✓ Page 13, Announcement 15: Extracted 6 day records
+[2025-12-04 14:50:56,364] INFO -   ✓ Page 13, Announcement 14: Extracted 6 day records
+[2025-12-04 14:50:56,583] INFO -   ✓ Page 13, Announcement 16: Extracted 5 day records
+[2025-12-04 14:50:56,675] INFO -   ✓ Page 13, Announcement 17: Extracted 6 day records
+[2025-12-04 14:50:57,128] INFO -   ✓ Page 13, Announcement 18: Extracted 6 day records
+[2025-12-04 14:50:57,408] INFO -   ✓ Page 13, Announcement 19: Extracted 7 day records
+[2025-12-04 14:50:57,717] INFO -   ✓ Page 13, Announcement 20: Extracted 5 day records
+[2025-12-04 14:50:58,261] INFO -   ✓ Page 13, Announcement 21: Extracted 7 day records
+[2025-12-04 14:50:58,601] INFO -   ✓ Page 13, Announcement 24: Extracted 5 day records
+[2025-12-04 14:50:58,601] INFO -   ✓ Page 13, Announcement 23: Extracted 6 day records
+[2025-12-04 14:50:58,846] INFO -   ✓ Page 13, Announcement 22: Extracted 7 day records
+[2025-12-04 14:50:58,847] INFO - Page 13 complete: 145 day records
+[2025-12-04 14:50:58,857] INFO - [OK] Saved page 13 batch: 145 day records to data\external\scraped\mea_power_outages_page_013.csv
+[2025-12-04 14:51:00,894] INFO - Reached stop page: 13
+[2025-12-04 14:51:03,220] INFO - Scraping complete. Total pages: 11, Total day records: 1509
+[2025-12-04 14:51:03,284] INFO - [OK] Saved combined file: 1509 day records to data\external\scraped\mea_power_outages_by_day_combined.csv
+[2025-12-04 14:51:03,284] INFO - 
+================================================================================
+[2025-12-04 14:51:03,284] INFO - Scraping completed in 627.31 seconds (10.46 minutes)
+[2025-12-04 14:51:03,285] INFO - Total pages scraped: 11
+[2025-12-04 14:51:03,285] INFO - Total day records: 1509
+[2025-12-04 14:51:03,285] INFO - Average records per page: 137.2
+[2025-12-04 14:51:03,285] INFO - Output directory: data\external\scraped
+[2025-12-04 14:51:03,286] INFO - ================================================================================
+[2025-12-04 14:51:03,286] INFO - 
+Done!

@@ -1,0 +1,51 @@
+[2025-12-02 16:45:36,966] INFO - ================================================================================
+[2025-12-02 16:45:36,966] INFO - MEA POWER OUTAGE SCRAPER
+[2025-12-02 16:45:36,966] INFO - ================================================================================
+[2025-12-02 16:45:36,966] INFO - Max pages: 50
+[2025-12-02 16:45:36,966] INFO - Batch size: 500
+[2025-12-02 16:45:36,967] INFO - Output: mea_power_outages.csv
+[2025-12-02 16:45:36,967] INFO - ================================================================================
+[2025-12-02 16:45:36,967] INFO - Starting MEA power outage scraper...
+[2025-12-02 16:45:38,398] INFO - Scraping page 1: https://www.mea.or.th/en/public-relations/power-outage-notifications/news
+[2025-12-02 16:45:46,523] INFO - Found 24 outage notifications on page 1
+[2025-12-02 16:47:11,343] INFO - Total outages collected: 24
+[2025-12-02 16:47:13,395] INFO - Scraping page 2: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=2
+[2025-12-02 16:47:18,997] INFO - Found 24 outage notifications on page 2
+[2025-12-02 16:48:46,959] INFO - Total outages collected: 48
+[2025-12-02 16:48:49,026] INFO - Scraping page 3: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=3
+[2025-12-02 16:48:54,694] INFO - Found 24 outage notifications on page 3
+[2025-12-02 16:50:25,584] INFO - Total outages collected: 72
+[2025-12-02 16:50:27,634] INFO - Scraping page 4: https://www.mea.or.th/en/public-relations/power-outage-notifications/news?page=4
+[2025-12-02 16:50:33,140] INFO - Found 24 outage notifications on page 4
+[2025-12-02 16:54:42,874] INFO - ================================================================================
+[2025-12-02 16:54:42,874] INFO - MEA POWER OUTAGE SCRAPER
+[2025-12-02 16:54:42,874] INFO - ================================================================================
+[2025-12-02 16:54:42,874] INFO - Max pages: 1
+[2025-12-02 16:54:42,875] INFO - Batch size: 500
+[2025-12-02 16:54:42,875] INFO - Output: mea_power_outages.csv
+[2025-12-02 16:54:42,875] INFO - Debug mode: False
+[2025-12-02 16:54:42,875] INFO - ================================================================================
+[2025-12-02 16:54:42,875] INFO - Starting MEA power outage scraper...
+[2025-12-02 16:54:44,023] INFO - Scraping page 1: https://www.mea.or.th/en/public-relations/power-outage-notifications/news
+[2025-12-02 16:54:49,336] INFO - Found 24 items using MEA selector: div.col-sm-6.col-md-4.col-lg-4.mb-4
+[2025-12-02 16:54:49,337] INFO - Found 24 outage notifications on page 1
+[2025-12-02 16:56:18,825] INFO - Total outages collected: 24
+[2025-12-02 16:56:20,881] INFO - Reached maximum pages limit: 1
+[2025-12-02 16:56:23,024] INFO - Scraping complete. Total outages: 24
+[2025-12-02 16:56:23,074] INFO - [OK] Saved 24 outages to data\external\scraped\mea_power_outages.csv
+[2025-12-02 16:56:23,081] INFO - [OK] Saved daily summary to data\external\scraped\mea_outages_daily_summary.csv
+[2025-12-02 16:56:23,081] INFO - 
+================================================================================
+[2025-12-02 16:56:23,081] INFO - MEA POWER OUTAGE SCRAPING SUMMARY
+[2025-12-02 16:56:23,081] INFO - ================================================================================
+[2025-12-02 16:56:23,083] INFO - Total outages scraped: 24
+[2025-12-02 16:56:23,084] INFO - 
+Outage types:
+[2025-12-02 16:56:23,084] INFO -   - scheduled: 24
+[2025-12-02 16:56:23,084] INFO - 
+Unique affected areas: 1
+[2025-12-02 16:56:23,084] INFO - ================================================================================
+[2025-12-02 16:56:23,085] INFO - 
+Scraping completed in 100.21 seconds (1.67 minutes)
+[2025-12-02 16:56:23,085] INFO - 
+Done!
