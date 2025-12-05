@@ -686,7 +686,7 @@ def main():
             st.write(f"- เฉลี่ย: {df_filtered['solve_days'].mean():.1f} วัน")
             st.write(f"- มัธยฐาน: {df_filtered['solve_days'].median():.1f} วัน")
             st.write(f"- สูงสุด: {df_filtered['solve_days'].max():.0f} วัน")
-            st.write(f"- ต่ำสุด: {df_filtered['solve_days'].min():.0f} วัน")
+            st.write(f"- ต่ำสุด: {max(0, df_filtered['solve_days'].min()):.0f} วัน")
 
     # Footer
     st.markdown("---")
