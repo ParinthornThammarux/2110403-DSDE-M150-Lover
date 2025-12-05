@@ -602,80 +602,147 @@ def plot_anomaly_scatter(df: pd.DataFrame, max_points: int = 2000) -> go.Figure:
     คำอธิบาย: แสดง complaint ที่ผิดปกติตามแกนเวลา
     ขนาดและสีของจุดแสดงระดับความผิดปกติ
     """
-    # Filter to show only anomalies or high scores
-    df_plot = df[df['anomaly_score'] > 0.5].copy()
-
-    # Limit points for performance
-    if len(df_plot) > max_points:
-        # Show top anomalies
-        df_plot = df_plot.nlargest(max_points, 'anomaly_score')
-
     fig = go.Figure()
 
-    # Add normal background (low score) if dataset is not too large
-    if len(df) < 10000:
-        df_normal = df[df['anomaly_score'] <= 0.5].copy()
-        if len(df_normal) > 0:
-            # Sample normal points
-            if len(df_normal) > 1000:
-                df_normal = df_normal.sample(n=1000, random_state=42)
-
-            fig.add_trace(go.Scatter(
-                x=df_normal['timestamp'],
-                y=df_normal['solve_days'],
-                mode='markers',
-                marker=dict(
-                    size=4,
-                    color='lightgray',
-                    opacity=0.3
-                ),
-                name='ปกติ',
-                hovertemplate='<b>ปกติ</b><br>วันที่: %{x}<br>ระยะเวลาแก้ปัญหา: %{y} วัน<extra></extra>'
-            ))
-
-    # Add anomalies
-    fig.add_trace(go.Scatter(
-        x=df_plot['timestamp'],
-        y=df_plot['solve_days'],
-        mode='markers',
-        marker=dict(
-            size=df_plot['anomaly_score'] * 20,
-            color=df_plot['anomaly_score'],
-            colorscale='Reds',
-            showscale=True,
-            colorbar=dict(title='Anomaly<br>Score'),
-            line=dict(width=1, color='white'),
-            opacity=0.8
-        ),
-        name='ผิดปกติ',
-        text=[f"{row['district']}<br>{row['primary_type']}" for _, row in df_plot.iterrows()],
-        hovertemplate='<b>%{text}</b><br>วันที่: %{x}<br>ระยะเวลาแก้ปัญหา: %{y} วัน<br>Anomaly Score: %{marker.color:.2f}<extra></extra>'
-    ))
-
-    # Add trend line for anomalies
-    if len(df_plot) > 10:
-        # Group by month to show trend
-        df_plot_copy = df_plot.copy()
-        df_plot_copy['month'] = pd.to_datetime(df_plot_copy['timestamp']).dt.to_period('M')
-        monthly_avg = df_plot_copy.groupby('month')['solve_days'].mean().reset_index()
-        monthly_avg['month'] = monthly_avg['month'].dt.to_timestamp()
+    # Always show normal background points (sampled for performance)
+    df_normal = df[df['anomaly_score'] <= 0.5].copy()
+    if len(df_normal) > 0:
+        # Sample normal points for performance
+        sample_size = min(len(df_normal), 1000)
+        df_normal_sampled = df_normal.sample(n=sample_size, random_state=42)
 
         fig.add_trace(go.Scatter(
-            x=monthly_avg['month'],
-            y=monthly_avg['solve_days'],
-            mode='lines',
-            line=dict(color='red', width=2, dash='dash'),
-            name='แนวโน้มรายเดือน',
-            hovertemplate='เดือน: %{x}<br>เฉลี่ย: %{y:.1f} วัน<extra></extra>'
+            x=df_normal_sampled['timestamp'],
+            y=df_normal_sampled['solve_days'],
+            mode='markers',
+            marker=dict(
+                size=4,
+                color='lightgray',
+                opacity=0.3
+            ),
+            name='ปกติ',
+            hovertemplate='<b>ปกติ</b><br>วันที่: %{x}<br>ระยะเวลาแก้ปัญหา: %{y} วัน<extra></extra>'
         ))
+
+    # Get anomalous points (score > 0.5)
+    df_anomaly = df[df['anomaly_score'] > 0.5].copy()
+
+    # Limit points for performance - stratified sampling to show variety of scores
+    if len(df_anomaly) > max_points:
+        # Sample across different score ranges to show color variety
+        high_scores = df_anomaly[df_anomaly['anomaly_score'] >= 0.85]
+        mid_scores = df_anomaly[(df_anomaly['anomaly_score'] >= 0.7) & (df_anomaly['anomaly_score'] < 0.85)]
+        low_scores = df_anomaly[(df_anomaly['anomaly_score'] > 0.5) & (df_anomaly['anomaly_score'] < 0.7)]
+
+        # Distribute max_points across ranges proportionally
+        n_high = min(len(high_scores), int(max_points * 0.4))
+        n_mid = min(len(mid_scores), int(max_points * 0.3))
+        n_low = min(len(low_scores), max_points - n_high - n_mid)
+
+        sampled_parts = []
+        if n_high > 0 and len(high_scores) > 0:
+            sampled_parts.append(high_scores.sample(n=n_high, random_state=42) if len(high_scores) > n_high else high_scores)
+        if n_mid > 0 and len(mid_scores) > 0:
+            sampled_parts.append(mid_scores.sample(n=n_mid, random_state=42) if len(mid_scores) > n_mid else mid_scores)
+        if n_low > 0 and len(low_scores) > 0:
+            sampled_parts.append(low_scores.sample(n=n_low, random_state=42) if len(low_scores) > n_low else low_scores)
+
+        if sampled_parts:
+            df_anomaly = pd.concat(sampled_parts, ignore_index=True)
+        else:
+            # Fallback to top anomalies if stratified sampling fails
+            df_anomaly = df_anomaly.nlargest(max_points, 'anomaly_score')
+
+    # Always show anomaly trace even if empty (to ensure colorbar appears)
+    if len(df_anomaly) > 0:
+        fig.add_trace(go.Scatter(
+            x=df_anomaly['timestamp'],
+            y=df_anomaly['solve_days'],
+            mode='markers',
+            marker=dict(
+                size=df_anomaly['anomaly_score'] * 20,
+                color=df_anomaly['anomaly_score'],
+                colorscale='Reds',
+                showscale=True,
+                colorbar=dict(
+                    title='Anomaly<br>Score',
+                    x=1.15,
+                    xanchor='left',
+                    len=0.7,
+                    y=0.5
+                ),
+                line=dict(width=1, color='white'),
+                opacity=0.8,
+                cmin=0.5,
+                cmax=1.0
+            ),
+            name='ผิดปกติ',
+            text=[f"{row['district']}<br>{row['primary_type']}" for _, row in df_anomaly.iterrows()],
+            hovertemplate='<b>%{text}</b><br>วันที่: %{x}<br>ระยะเวลาแก้ปัญหา: %{y} วัน<br>Anomaly Score: %{marker.color:.2f}<extra></extra>'
+        ))
+    else:
+        # Add empty trace with colorbar to ensure it always shows
+        fig.add_trace(go.Scatter(
+            x=[],
+            y=[],
+            mode='markers',
+            marker=dict(
+                size=10,
+                color=[],
+                colorscale='Reds',
+                showscale=True,
+                colorbar=dict(
+                    title='Anomaly<br>Score',
+                    x=1.15,
+                    xanchor='left',
+                    len=0.7,
+                    y=0.5
+                ),
+                cmin=0.5,
+                cmax=1.0
+            ),
+            name='ผิดปกติ'
+        ))
+
+    df_plot = df_anomaly
+
+    # Determine y-axis range and ticks
+    max_solve_days = df['solve_days'].max()
+
+    # Create tick values at 5-day intervals up to 100
+    tick_vals = list(range(0, 101, 5))
+    tick_text = [str(i) for i in range(0, 101, 5)]
+
+    # Set y-axis range to cap at 105 to keep consistent spacing
+    y_range = [0, min(max_solve_days * 1.05, 105)]
+
+    # If max > 100, add 100+ label at position 105
+    if max_solve_days > 100:
+        tick_vals.append(105)
+        tick_text.append('100+')
+        y_range = [0, 110]
 
     fig.update_layout(
         title=f'การตรวจจับความผิดปกติ (แสดง {len(df_plot):,} รายการที่ผิดปกติ)',
         xaxis_title='วันที่',
         yaxis_title='ระยะเวลาในการแก้ปัญหา (วัน)',
+        yaxis=dict(
+            tickmode='array',
+            tickvals=tick_vals,
+            ticktext=tick_text,
+            range=y_range
+        ),
         template='plotly_white',
         height=500,
-        hovermode='closest'
+        hovermode='closest',
+        margin=dict(r=200, t=80),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5
+        )
     )
 
     return fig
