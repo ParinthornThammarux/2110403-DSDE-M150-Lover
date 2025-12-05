@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nul)",
+      "Bash(python -c:*)",
+      "Bash(python test_structure.py:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
