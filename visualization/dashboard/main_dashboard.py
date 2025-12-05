@@ -177,9 +177,10 @@ def load_ml_models():
 
     status_msg = []
     if rf_loaded:
-        status_msg.append("✅ RandomForest Forecaster")
+        status_msg.append("✅ RandomForest Forecaster (New Model)")
     else:
-        status_msg.append("⚠️ RandomForest (ใช้โมเดลจำลอง)")
+        status_msg.append("❌ RandomForest Forecaster - MODEL REQUIRED")
+        st.sidebar.error("⚠️ Forecasting model not found! Please train the model first.")
 
     if anomaly_loaded:
         status_msg.append("✅ Isolation Forest Anomaly Detector")

@@ -25,7 +25,7 @@ class MLModelIntegrator:
         self.anomaly_model = None
         self.anomaly_detector = None
 
-    def load_forecasting_model(self, model_path: str = 'ml_models/forecasting/models/rf_forecaster.pkl'):
+    def load_forecasting_model(self, model_path: str = 'forecasting/outputs/rf_model.pkl'):
         """
         Load RandomForest forecasting model
 
@@ -34,9 +34,10 @@ class MLModelIntegrator:
         """
         try:
             if Path(model_path).exists():
-                model_data = joblib.load(model_path)
-                self.rf_model = model_data.get('model')
+                # Load the new model format (direct RandomForest model)
+                self.rf_model = joblib.load(model_path)
                 logger.info(f"Loaded forecasting model from {model_path}")
+                logger.info(f"Model type: {type(self.rf_model)}")
                 return True
             else:
                 logger.warning(f"Forecasting model not found at {model_path}")
@@ -83,22 +84,12 @@ class MLModelIntegrator:
             future_dates = pd.date_range(start=last_date + timedelta(days=1), periods=days_ahead, freq='D')
 
             if self.rf_model is not None:
-                # Use trained model if available
-                # Create features for prediction
-                future_df = pd.DataFrame({'date': future_dates})
-                future_df['day_of_week'] = future_df['date'].dt.dayofweek
-                future_df['month'] = future_df['date'].dt.month
-                future_df['day'] = future_df['date'].dt.day
-
-                # Predict
-                try:
-                    predictions = self.rf_model.predict(future_df[['day_of_week', 'month', 'day']])
-                except:
-                    # Fallback to simulated forecast
-                    predictions = self._simulate_forecast(daily_counts, days_ahead)
+                # Use the new trained model (sequence-based)
+                predictions = self._predict_with_sequence_model(daily_counts, days_ahead)
             else:
-                # Simulated forecast
-                predictions = self._simulate_forecast(daily_counts, days_ahead)
+                # No model available
+                logger.error("No forecasting model available")
+                raise ValueError("Forecasting model not loaded. Please ensure the model file exists.")
 
             # Create forecast dataframe
             forecast_df = pd.DataFrame({
@@ -112,32 +103,79 @@ class MLModelIntegrator:
 
         except Exception as e:
             logger.error(f"Error generating forecast: {e}")
-            return self._fallback_forecast(days_ahead)
+            import traceback
+            traceback.print_exc()
+            raise RuntimeError(f"Failed to generate forecast: {e}")
 
-    def _simulate_forecast(self, daily_counts: pd.DataFrame, days_ahead: int) -> np.ndarray:
-        """Generate simulated forecast based on historical patterns"""
-        # Calculate trend and seasonality
-        recent_mean = daily_counts['count'].tail(30).mean()
-        recent_std = daily_counts['count'].tail(30).std()
+    def _predict_with_sequence_model(self, daily_counts: pd.DataFrame, days_ahead: int) -> np.ndarray:
+        """
+        Generate predictions using the sequence-based RandomForest model
 
-        trend = np.linspace(recent_mean, recent_mean * 1.05, days_ahead)
-        seasonality = recent_std * 0.3 * np.sin(2 * np.pi * np.arange(days_ahead) / 7)
-        noise = np.random.normal(0, recent_std * 0.1, days_ahead)
+        The model expects sequences with lookback_days=30 and returns forecast_horizon=7 day predictions
+        """
+        lookback_days = 30
+        forecast_horizon = 7  # Model was trained to predict 7 days ahead
 
-        forecast = trend + seasonality + noise
-        return np.maximum(forecast, 0)  # Ensure non-negative
+        # Prepare daily data with features (matching training format)
+        daily_data = daily_counts.set_index('date')
 
-    def _fallback_forecast(self, days_ahead: int) -> pd.DataFrame:
-        """Fallback forecast when data is unavailable"""
-        future_dates = pd.date_range(start=datetime.now(), periods=days_ahead, freq='D')
-        predictions = 100 + 20 * np.sin(2 * np.pi * np.arange(days_ahead) / 7)
+        # Add time features
+        daily_data['dayofweek'] = daily_data.index.dayofweek
+        daily_data['month'] = daily_data.index.month
+        daily_data['is_weekend'] = daily_data['dayofweek'].isin([5, 6]).astype(int)
 
-        return pd.DataFrame({
-            'date': future_dates,
-            'predicted': predictions,
-            'lower_bound': predictions * 0.85,
-            'upper_bound': predictions * 1.15
-        })
+        # Add rolling features
+        daily_data['roll_mean_7'] = daily_data['count'].rolling(7, min_periods=1).mean()
+        daily_data['roll_std_7'] = daily_data['count'].rolling(7, min_periods=1).std().fillna(0)
+        daily_data['roll_mean_30'] = daily_data['count'].rolling(30, min_periods=1).mean()
+
+        # Select feature columns in the same order as training
+        feature_cols = ['count', 'dayofweek', 'month', 'is_weekend', 'roll_mean_7', 'roll_std_7', 'roll_mean_30']
+        values = daily_data[feature_cols].values
+
+        # Generate predictions iteratively for the required days_ahead
+        all_predictions = []
+        current_sequence = values[-lookback_days:]  # Start with the last 30 days
+
+        # Number of iterations needed
+        num_iterations = int(np.ceil(days_ahead / forecast_horizon))
+
+        for i in range(num_iterations):
+            # Prepare input (flatten the sequence)
+            X = current_sequence.reshape(1, -1)
+
+            # Predict next 7 days
+            pred = self.rf_model.predict(X)[0]  # Returns array of 7 values
+
+            # Take only what we need (in case last iteration predicts more than needed)
+            remaining = days_ahead - len(all_predictions)
+            pred_to_use = pred[:min(forecast_horizon, remaining)]
+            all_predictions.extend(pred_to_use)
+
+            # Update sequence for next iteration
+            # Create new rows with predicted values and estimated features
+            for j, pred_val in enumerate(pred):
+                if len(all_predictions) >= days_ahead:
+                    break
+
+                # Calculate date for this prediction
+                next_date = daily_data.index[-1] + timedelta(days=len(all_predictions))
+
+                # Create new row with prediction and features
+                new_row = np.array([
+                    pred_val,  # count
+                    next_date.dayofweek,  # dayofweek
+                    next_date.month,  # month
+                    int(next_date.dayofweek in [5, 6]),  # is_weekend
+                    np.mean(current_sequence[-7:, 0]),  # roll_mean_7
+                    np.std(current_sequence[-7:, 0]),  # roll_std_7
+                    np.mean(current_sequence[-30:, 0])  # roll_mean_30
+                ])
+
+                # Shift sequence and add new prediction
+                current_sequence = np.vstack([current_sequence[1:], new_row])
+
+        return np.array(all_predictions[:days_ahead])
 
     def generate_backtest_predictions(self, df: pd.DataFrame, lookback_days: int = 90) -> pd.DataFrame:
         """
@@ -156,27 +194,54 @@ class MLModelIntegrator:
             logger.info(f"Generating backtest predictions for {len(daily_counts)} days")
             logger.info(f"RF model available: {self.rf_model is not None}")
 
-            if self.rf_model is not None:
-                # Create features for past dates
-                past_df = daily_counts[['date']].copy()
-                past_df['day_of_week'] = past_df['date'].dt.dayofweek
-                past_df['month'] = past_df['date'].dt.month
-                past_df['day'] = past_df['date'].dt.day
+            if self.rf_model is None:
+                raise ValueError("Forecasting model not loaded. Cannot generate backtest predictions.")
 
-                # Predict using RF model
-                try:
-                    predictions = self.rf_model.predict(past_df[['day_of_week', 'month', 'day']])
-                    past_df['predicted'] = predictions
-                    logger.info(f"RF model predictions generated: {len(predictions)} values")
-                except Exception as e:
-                    logger.warning(f"RF prediction failed for backtest, using moving average: {e}")
-                    # Fallback to moving average
-                    past_df['predicted'] = daily_counts['count'].rolling(window=7, min_periods=1).mean().shift(1)
-            else:
-                # Use moving average as fallback
-                logger.info("No RF model, using moving average for backtest")
-                past_df = daily_counts[['date']].copy()
-                past_df['predicted'] = daily_counts['count'].rolling(window=7, min_periods=1).mean().shift(1)
+            # Get all historical data (not just lookback_days) for proper feature preparation
+            df_all = df.copy()
+            df_all['date'] = pd.to_datetime(df_all['timestamp']).dt.date
+            all_daily_counts = df_all.groupby('date').size().reset_index(name='count')
+            all_daily_counts['date'] = pd.to_datetime(all_daily_counts['date'])
+
+            # Prepare data with features
+            daily_data = all_daily_counts.set_index('date')
+            daily_data['dayofweek'] = daily_data.index.dayofweek
+            daily_data['month'] = daily_data.index.month
+            daily_data['is_weekend'] = daily_data['dayofweek'].isin([5, 6]).astype(int)
+            daily_data['roll_mean_7'] = daily_data['count'].rolling(7, min_periods=1).mean()
+            daily_data['roll_std_7'] = daily_data['count'].rolling(7, min_periods=1).std().fillna(0)
+            daily_data['roll_mean_30'] = daily_data['count'].rolling(30, min_periods=1).mean()
+
+            feature_cols = ['count', 'dayofweek', 'month', 'is_weekend', 'roll_mean_7', 'roll_std_7', 'roll_mean_30']
+            values = daily_data[feature_cols].values
+
+            # Generate predictions for each day in lookback period
+            lookback_window = 30
+            predictions = []
+            dates = []
+
+            # Start from day 30 onwards (need at least 30 days of history)
+            start_idx = max(lookback_window, len(values) - lookback_days)
+
+            for i in range(start_idx, len(values)):
+                if i < lookback_window:
+                    continue
+
+                # Get sequence for this prediction
+                sequence = values[i - lookback_window:i]
+                X = sequence.reshape(1, -1)
+
+                # Predict (will give 7 days, but we only use first day for backtest)
+                pred = self.rf_model.predict(X)[0][0]
+                predictions.append(pred)
+                dates.append(daily_data.index[i])
+
+            past_df = pd.DataFrame({
+                'date': dates,
+                'predicted': predictions
+            })
+
+            logger.info(f"RF sequence model predictions generated: {len(predictions)} values")
 
             result = past_df.dropna()
             logger.info(f"Returning {len(result)} backtest predictions after dropna()")
@@ -184,108 +249,6 @@ class MLModelIntegrator:
 
         except Exception as e:
             logger.error(f"Error generating backtest predictions: {e}")
-            import traceback
-            traceback.print_exc()
-            return pd.DataFrame()
-
-    def generate_synthetic_data_from_forecast(self, start_date: str = None, days: int = 90) -> pd.DataFrame:
-        """
-        Generate synthetic complaint data based on forecast model predictions
-
-        คำอธิบาย: สร้างข้อมูล complaint สังเคราะห์จากโมเดลการพยากรณ์
-        ใช้สำหรับการวิเคราะห์ความผิดปกติโดยไม่ใช้ข้อมูลจริง
-
-        Args:
-            start_date: วันที่เริ่มต้น (default: 90 days ago)
-            days: จำนวนวันที่ต้องการสร้าง
-
-        Returns:
-            DataFrame with synthetic complaint data
-        """
-        try:
-            if self.rf_model is None:
-                logger.warning("No RF model available for synthetic data generation")
-                return pd.DataFrame()
-
-            # Set date range
-            if start_date is None:
-                end_date = datetime.now()
-                start_date = end_date - timedelta(days=days)
-            else:
-                start_date = pd.to_datetime(start_date)
-                end_date = start_date + timedelta(days=days)
-
-            # Generate date range
-            date_range = pd.date_range(start=start_date, end=end_date, freq='D')
-
-            # Create feature dataframe
-            forecast_df = pd.DataFrame({'date': date_range})
-            forecast_df['day_of_week'] = forecast_df['date'].dt.dayofweek
-            forecast_df['month'] = forecast_df['date'].dt.month
-            forecast_df['day'] = forecast_df['date'].dt.day
-
-            # Generate predictions
-            predictions = self.rf_model.predict(forecast_df[['day_of_week', 'month', 'day']])
-            forecast_df['predicted_count'] = predictions.round().astype(int)
-
-            logger.info(f"Generated {len(forecast_df)} days of predictions")
-
-            # Create synthetic complaint records
-            # For each date, create N rows based on predicted count
-            synthetic_records = []
-
-            # Common districts and types for synthetic data
-            districts = ['คลองเตย', 'บางกอกใหญ่', 'ปทุมวัน', 'สาทร', 'ราชเทวี',
-                        'ดินแดง', 'ห้วยขวาง', 'วัฒนา', 'บางรัก', 'ประเวศ']
-            primary_types = ['ถนน/ทางเท้า', 'ขยะ', 'น้ำประปา/น้ำใช้', 'ไฟฟ้า/แสงสว่าง',
-                           'การจราจร', 'ความสะอาด', 'สวนสาธารณะ', 'อื่นๆ']
-
-            for _, row in forecast_df.iterrows():
-                date = row['date']
-                count = row['predicted_count']
-
-                # Generate records for this date
-                for i in range(count):
-                    # Generate random but realistic features
-                    hour = np.random.choice([7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                                           p=[0.05, 0.1, 0.15, 0.15, 0.1, 0.08, 0.08, 0.08, 0.05, 0.05, 0.05, 0.03, 0.02, 0.01])
-                    minute = np.random.randint(0, 60)
-
-                    timestamp = date + timedelta(hours=int(hour), minutes=int(minute))
-
-                    # Random district and type
-                    district = np.random.choice(districts)
-                    primary_type = np.random.choice(primary_types)
-
-                    # Generate solve_days with realistic distribution
-                    # Most complaints solved within 30 days, but some take longer
-                    solve_days = np.random.gamma(shape=2, scale=5)  # mean ~10 days
-                    solve_days = min(solve_days, 180)  # cap at 180 days
-
-                    # Random coordinates within Bangkok bounds
-                    lat = 13.7 + np.random.uniform(-0.15, 0.15)
-                    lon = 100.5 + np.random.uniform(-0.15, 0.15)
-
-                    synthetic_records.append({
-                        'timestamp': timestamp,
-                        'date': date,
-                        'hour': hour,
-                        'day_of_week': date.dayofweek,
-                        'month': date.month,
-                        'district': district,
-                        'primary_type': primary_type,
-                        'solve_days': solve_days,
-                        'lat': lat,
-                        'lon': lon
-                    })
-
-            synthetic_df = pd.DataFrame(synthetic_records)
-            logger.info(f"Generated {len(synthetic_df)} synthetic complaint records from {days} days of predictions")
-
-            return synthetic_df
-
-        except Exception as e:
-            logger.error(f"Error generating synthetic data from forecast: {e}")
             import traceback
             traceback.print_exc()
             return pd.DataFrame()
@@ -441,10 +404,13 @@ def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.Dat
         daily_counts['date'] = pd.to_datetime(daily_counts['date'])
         historical_actual = daily_counts
 
-        # Add historical actual data
+        # Exclude the last day to avoid showing incomplete data that looks like a drop
+        daily_counts_display = daily_counts.iloc[:-1] if len(daily_counts) > 1 else daily_counts
+
+        # Add historical actual data (excluding last day)
         fig.add_trace(go.Scatter(
-            x=daily_counts['date'],
-            y=daily_counts['count'],
+            x=daily_counts_display['date'],
+            y=daily_counts_display['count'],
             mode='lines',
             name='ข้อมูลจริง',
             line=dict(color='#1f77b4', width=2.5),
@@ -547,13 +513,14 @@ def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.Dat
     ))
 
     # Add vertical line to separate past and future
-    if historical_actual is not None and len(historical_actual) > 0:
-        last_date = historical_actual['date'].max()
+    if historical_actual is not None and len(historical_actual) > 1:
+        # Use second-to-last date since we're excluding the last day from display
+        display_last_date = historical_actual['date'].iloc[-2]
 
         fig.add_shape(
             type="line",
-            x0=last_date,
-            x1=last_date,
+            x0=display_last_date,
+            x1=display_last_date,
             y0=0,
             y1=1,
             yref="paper",
@@ -562,7 +529,7 @@ def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.Dat
         )
 
         fig.add_annotation(
-            x=last_date,
+            x=display_last_date,
             y=1,
             yref="paper",
             text="วันนี้",
