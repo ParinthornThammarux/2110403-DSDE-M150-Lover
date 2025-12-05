@@ -139,6 +139,157 @@ class MLModelIntegrator:
             'upper_bound': predictions * 1.15
         })
 
+    def generate_backtest_predictions(self, df: pd.DataFrame, lookback_days: int = 90) -> pd.DataFrame:
+        """
+        Generate predictions for past dates to validate model accuracy
+
+        คำอธิบาย: สร้างค่าพยากรณ์สำหรับวันที่ในอดีตเพื่อเปรียบเทียบกับข้อมูลจริง
+        """
+        try:
+            # Aggregate historical data
+            df_copy = df.copy()
+            df_copy['date'] = pd.to_datetime(df_copy['timestamp']).dt.date
+            daily_counts = df_copy.groupby('date').size().reset_index(name='count')
+            daily_counts['date'] = pd.to_datetime(daily_counts['date'])
+            daily_counts = daily_counts.tail(lookback_days)
+
+            logger.info(f"Generating backtest predictions for {len(daily_counts)} days")
+            logger.info(f"RF model available: {self.rf_model is not None}")
+
+            if self.rf_model is not None:
+                # Create features for past dates
+                past_df = daily_counts[['date']].copy()
+                past_df['day_of_week'] = past_df['date'].dt.dayofweek
+                past_df['month'] = past_df['date'].dt.month
+                past_df['day'] = past_df['date'].dt.day
+
+                # Predict using RF model
+                try:
+                    predictions = self.rf_model.predict(past_df[['day_of_week', 'month', 'day']])
+                    past_df['predicted'] = predictions
+                    logger.info(f"RF model predictions generated: {len(predictions)} values")
+                except Exception as e:
+                    logger.warning(f"RF prediction failed for backtest, using moving average: {e}")
+                    # Fallback to moving average
+                    past_df['predicted'] = daily_counts['count'].rolling(window=7, min_periods=1).mean().shift(1)
+            else:
+                # Use moving average as fallback
+                logger.info("No RF model, using moving average for backtest")
+                past_df = daily_counts[['date']].copy()
+                past_df['predicted'] = daily_counts['count'].rolling(window=7, min_periods=1).mean().shift(1)
+
+            result = past_df.dropna()
+            logger.info(f"Returning {len(result)} backtest predictions after dropna()")
+            return result
+
+        except Exception as e:
+            logger.error(f"Error generating backtest predictions: {e}")
+            import traceback
+            traceback.print_exc()
+            return pd.DataFrame()
+
+    def generate_synthetic_data_from_forecast(self, start_date: str = None, days: int = 90) -> pd.DataFrame:
+        """
+        Generate synthetic complaint data based on forecast model predictions
+
+        คำอธิบาย: สร้างข้อมูล complaint สังเคราะห์จากโมเดลการพยากรณ์
+        ใช้สำหรับการวิเคราะห์ความผิดปกติโดยไม่ใช้ข้อมูลจริง
+
+        Args:
+            start_date: วันที่เริ่มต้น (default: 90 days ago)
+            days: จำนวนวันที่ต้องการสร้าง
+
+        Returns:
+            DataFrame with synthetic complaint data
+        """
+        try:
+            if self.rf_model is None:
+                logger.warning("No RF model available for synthetic data generation")
+                return pd.DataFrame()
+
+            # Set date range
+            if start_date is None:
+                end_date = datetime.now()
+                start_date = end_date - timedelta(days=days)
+            else:
+                start_date = pd.to_datetime(start_date)
+                end_date = start_date + timedelta(days=days)
+
+            # Generate date range
+            date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+
+            # Create feature dataframe
+            forecast_df = pd.DataFrame({'date': date_range})
+            forecast_df['day_of_week'] = forecast_df['date'].dt.dayofweek
+            forecast_df['month'] = forecast_df['date'].dt.month
+            forecast_df['day'] = forecast_df['date'].dt.day
+
+            # Generate predictions
+            predictions = self.rf_model.predict(forecast_df[['day_of_week', 'month', 'day']])
+            forecast_df['predicted_count'] = predictions.round().astype(int)
+
+            logger.info(f"Generated {len(forecast_df)} days of predictions")
+
+            # Create synthetic complaint records
+            # For each date, create N rows based on predicted count
+            synthetic_records = []
+
+            # Common districts and types for synthetic data
+            districts = ['คลองเตย', 'บางกอกใหญ่', 'ปทุมวัน', 'สาทร', 'ราชเทวี',
+                        'ดินแดง', 'ห้วยขวาง', 'วัฒนา', 'บางรัก', 'ประเวศ']
+            primary_types = ['ถนน/ทางเท้า', 'ขยะ', 'น้ำประปา/น้ำใช้', 'ไฟฟ้า/แสงสว่าง',
+                           'การจราจร', 'ความสะอาด', 'สวนสาธารณะ', 'อื่นๆ']
+
+            for _, row in forecast_df.iterrows():
+                date = row['date']
+                count = row['predicted_count']
+
+                # Generate records for this date
+                for i in range(count):
+                    # Generate random but realistic features
+                    hour = np.random.choice([7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+                                           p=[0.05, 0.1, 0.15, 0.15, 0.1, 0.08, 0.08, 0.08, 0.05, 0.05, 0.05, 0.03, 0.02, 0.01])
+                    minute = np.random.randint(0, 60)
+
+                    timestamp = date + timedelta(hours=int(hour), minutes=int(minute))
+
+                    # Random district and type
+                    district = np.random.choice(districts)
+                    primary_type = np.random.choice(primary_types)
+
+                    # Generate solve_days with realistic distribution
+                    # Most complaints solved within 30 days, but some take longer
+                    solve_days = np.random.gamma(shape=2, scale=5)  # mean ~10 days
+                    solve_days = min(solve_days, 180)  # cap at 180 days
+
+                    # Random coordinates within Bangkok bounds
+                    lat = 13.7 + np.random.uniform(-0.15, 0.15)
+                    lon = 100.5 + np.random.uniform(-0.15, 0.15)
+
+                    synthetic_records.append({
+                        'timestamp': timestamp,
+                        'date': date,
+                        'hour': hour,
+                        'day_of_week': date.dayofweek,
+                        'month': date.month,
+                        'district': district,
+                        'primary_type': primary_type,
+                        'solve_days': solve_days,
+                        'lat': lat,
+                        'lon': lon
+                    })
+
+            synthetic_df = pd.DataFrame(synthetic_records)
+            logger.info(f"Generated {len(synthetic_df)} synthetic complaint records from {days} days of predictions")
+
+            return synthetic_df
+
+        except Exception as e:
+            logger.error(f"Error generating synthetic data from forecast: {e}")
+            import traceback
+            traceback.print_exc()
+            return pd.DataFrame()
+
     def detect_anomalies(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Detect anomalies in complaint data
@@ -267,21 +418,117 @@ class MLModelIntegrator:
         return df
 
 
-def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.DataFrame = None) -> go.Figure:
+def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.DataFrame = None, lookback_days: int = 90, ml_integrator=None) -> go.Figure:
     """
-    Plot forecast with confidence intervals
+    Plot forecast with confidence intervals and historical comparison
 
     คำอธิบาย: แสดงการพยากรณ์จำนวน complaint พร้อม confidence interval
-    เส้นสีแดงคือค่าพยากรณ์ พื้นที่สีเทาคือช่วงความเชื่อมั่น
+    เส้นสีน้ำเงินคือข้อมูลจริง เส้นสีแดงคือค่าพยากรณ์ (ทั้งอดีตและอนาคต) พื้นที่สีเทาคือช่วงความเชื่อมั่น
     """
     fig = go.Figure()
 
-    # Add confidence interval
+    # Process historical data first to get actual values
+    historical_actual = None
+    mape = None
+    rmse = None
+    predicted_past_df = None
+
+    if historical_df is not None:
+        historical_df = historical_df.copy()
+        historical_df['date'] = pd.to_datetime(historical_df['timestamp']).dt.date
+        daily_counts = historical_df.groupby('date').size().reset_index(name='count')
+        daily_counts = daily_counts.tail(lookback_days)  # Last N days
+        daily_counts['date'] = pd.to_datetime(daily_counts['date'])
+        historical_actual = daily_counts
+
+        # Add historical actual data
+        fig.add_trace(go.Scatter(
+            x=daily_counts['date'],
+            y=daily_counts['count'],
+            mode='lines',
+            name='ข้อมูลจริง',
+            line=dict(color='#1f77b4', width=2.5),
+            hovertemplate='วันที่: %{x}<br>จำนวนจริง: %{y:,.0f}<extra></extra>'
+        ))
+
+        # Generate predictions for past dates using RF model
+        try:
+            if ml_integrator is not None:
+                # Use RF model for past predictions
+                predicted_past_df = ml_integrator.generate_backtest_predictions(historical_df, lookback_days)
+
+                if len(predicted_past_df) > 0:
+                    # Merge with actual data to calculate metrics
+                    merged = pd.merge(
+                        daily_counts[['date', 'count']],
+                        predicted_past_df[['date', 'predicted']],
+                        on='date',
+                        how='inner'
+                    )
+
+                    if len(merged) > 0:
+                        actual = merged['count']
+                        predicted = merged['predicted']
+                        mape = np.mean(np.abs((actual - predicted) / actual)) * 100
+                        rmse = np.sqrt(np.mean((actual - predicted) ** 2))
+            else:
+                # Fallback to moving average if no ML integrator
+                window = 7
+                daily_counts['predicted_past'] = daily_counts['count'].rolling(window=window, min_periods=1).mean().shift(1)
+                predicted_past_df = daily_counts[['date', 'predicted_past']].copy()
+                predicted_past_df = predicted_past_df.rename(columns={'predicted_past': 'predicted'})
+                predicted_past_df = predicted_past_df.dropna()
+
+                # Calculate accuracy metrics
+                valid_indices = daily_counts['predicted_past'].notna()
+                if valid_indices.sum() > 0:
+                    actual = daily_counts.loc[valid_indices, 'count']
+                    predicted = daily_counts.loc[valid_indices, 'predicted_past']
+                    mape = np.mean(np.abs((actual - predicted) / actual)) * 100
+                    rmse = np.sqrt(np.mean((actual - predicted) ** 2))
+        except Exception as e:
+            logger.warning(f"Error generating past predictions: {e}")
+            pass
+
+    # Combine past predictions with future predictions into one continuous line
+    if predicted_past_df is not None and len(predicted_past_df) > 0:
+        logger.info(f"Combining {len(predicted_past_df)} past predictions with {len(forecast_df)} future predictions")
+
+        # Combine past and future predictions
+        combined_predictions = pd.concat([
+            predicted_past_df[['date', 'predicted']],
+            forecast_df[['date', 'predicted']]
+        ], ignore_index=True)
+
+        # Add single continuous prediction line (past + future)
+        fig.add_trace(go.Scatter(
+            x=combined_predictions['date'],
+            y=combined_predictions['predicted'],
+            mode='lines+markers',
+            name='ค่าพยากรณ์ (โมเดล)',
+            line=dict(color='red', width=2.5),
+            marker=dict(size=5, symbol='circle'),
+            hovertemplate='วันที่: %{x}<br>ค่าพยากรณ์: %{y:.0f}<extra></extra>'
+        ))
+    else:
+        # Only future predictions if no historical data
+        logger.warning("No past predictions available, showing only future predictions")
+        fig.add_trace(go.Scatter(
+            x=forecast_df['date'],
+            y=forecast_df['predicted'],
+            mode='lines+markers',
+            name='ค่าพยากรณ์ (โมเดล)',
+            line=dict(color='red', width=2.5),
+            marker=dict(size=5, symbol='circle'),
+            hovertemplate='วันที่: %{x}<br>ค่าพยากรณ์: %{y:.0f}<extra></extra>'
+        ))
+
+    # Add future confidence interval
     fig.add_trace(go.Scatter(
         x=forecast_df['date'],
         y=forecast_df['upper_bound'],
         mode='lines',
-        name='ขอบบน',
+        name='ช่วงความเชื่อมั่น',
         line=dict(width=0),
         showlegend=False,
         hoverinfo='skip'
@@ -291,43 +538,46 @@ def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.Dat
         x=forecast_df['date'],
         y=forecast_df['lower_bound'],
         mode='lines',
-        name='ขอบล่าง',
+        name='ช่วงความเชื่อมั่น',
         line=dict(width=0),
-        fillcolor='rgba(68, 68, 68, 0.2)',
+        fillcolor='rgba(255, 0, 0, 0.15)',
         fill='tonexty',
         showlegend=True,
-        hoverinfo='skip'
+        hovertemplate='ขอบล่าง: %{y:.0f}<extra></extra>'
     ))
 
-    # Add prediction line
-    fig.add_trace(go.Scatter(
-        x=forecast_df['date'],
-        y=forecast_df['predicted'],
-        mode='lines+markers',
-        name='ค่าพยากรณ์',
-        line=dict(color='red', width=3),
-        marker=dict(size=6),
-        hovertemplate='วันที่: %{x}<br>ค่าพยากรณ์: %{y:.0f}<extra></extra>'
-    ))
+    # Add vertical line to separate past and future
+    if historical_actual is not None and len(historical_actual) > 0:
+        last_date = historical_actual['date'].max()
 
-    # Add historical data if provided
-    if historical_df is not None:
-        historical_df = historical_df.copy()
-        historical_df['date'] = pd.to_datetime(historical_df['timestamp']).dt.date
-        daily_counts = historical_df.groupby('date').size().reset_index(name='count')
-        daily_counts = daily_counts.tail(60)  # Last 60 days
+        fig.add_shape(
+            type="line",
+            x0=last_date,
+            x1=last_date,
+            y0=0,
+            y1=1,
+            yref="paper",
+            line=dict(color="gray", width=2, dash="dash"),
+            opacity=0.5
+        )
 
-        fig.add_trace(go.Scatter(
-            x=pd.to_datetime(daily_counts['date']),
-            y=daily_counts['count'],
-            mode='lines',
-            name='ข้อมูลจริง',
-            line=dict(color='blue', width=2),
-            hovertemplate='วันที่: %{x}<br>จำนวนจริง: %{y}<extra></extra>'
-        ))
+        fig.add_annotation(
+            x=last_date,
+            y=1,
+            yref="paper",
+            text="วันนี้",
+            showarrow=False,
+            yshift=10,
+            font=dict(size=10, color="gray")
+        )
+
+    # Add title with accuracy info if available
+    title_text = 'การพยากรณ์จำนวน Complaint (RandomForest Model)'
+    if mape is not None and rmse is not None:
+        title_text += f'<br><sub>ความแม่นยำ: MAPE={mape:.1f}%, RMSE={rmse:.0f}</sub>'
 
     fig.update_layout(
-        title='การพยากรณ์จำนวน Complaint (RandomForest Model)',
+        title=title_text,
         xaxis_title='วันที่',
         yaxis_title='จำนวน Complaint',
         template='plotly_white',

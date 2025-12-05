@@ -3,7 +3,8 @@
     "allow": [
       "Bash(nul)",
       "Bash(python -c:*)",
-      "Bash(python test_structure.py:*)"
+      "Bash(python test_structure.py:*)",
+      "Bash(python -m py_compile:*)"
     ],
     "deny": [],
     "ask": []

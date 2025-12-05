@@ -462,10 +462,11 @@ def main():
 
         st.markdown("""
         <div class="info-box">
-        <b>คำอธิบาย:</b> ใช้โมเดล RandomForest ในการพยากรณ์จำนวน complaint ในอนาคต<br>
-        - <b>เส้นสีน้ำเงิน:</b> ข้อมูลจริงในอดีต<br>
-        - <b>เส้นสีแดง:</b> ค่าพยากรณ์<br>
-        - <b>พื้นที่สีเทา:</b> ช่วงความเชื่อมั่น (Confidence Interval)
+        <b>คำอธิบาย:</b> ใช้โมเดล RandomForest ในการพยากรณ์จำนวน complaint<br>
+        - <b>เส้นสีน้ำเงิน:</b> ข้อมูลจริง<br>
+        - <b>เส้นสีแดง:</b> ค่าพยากรณ์ (ทั้งอดีตและอนาคต - เปรียบเทียบความแม่นยำและดูอนาคต)<br>
+        - <b>พื้นที่สีเทา:</b> ช่วงความเชื่อมั่นสำหรับอนาคต (Confidence Interval)<br>
+        - <b>เส้นประสีเทา:</b> แบ่งระหว่างอดีตและอนาคต (วันนี้)
         </div>
         """, unsafe_allow_html=True)
 
@@ -474,7 +475,7 @@ def main():
         with st.spinner("กำลังสร้างการพยากรณ์..."):
             forecast_df = ml_integrator.generate_forecast(df_filtered, days_ahead=forecast_days)
 
-        st.plotly_chart(plot_forecast_visualization(forecast_df, df_filtered), use_container_width=True)
+        st.plotly_chart(plot_forecast_visualization(forecast_df, df_filtered, ml_integrator=ml_integrator), use_container_width=True)
 
         # Forecast statistics
         col1, col2, col3 = st.columns(3)
@@ -511,72 +512,65 @@ def main():
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> ใช้โมเดล Isolation Forest ในการตรวจจับ complaint ที่มีพฤติกรรมผิดปกติ<br>
-        เช่น ใช้เวลาแก้ปัญหานานผิดปกติ หรือเกิดในพื้นที่/เวลาที่ไม่ปกติ<br>
-        Anomaly Score สูง = ผิดปกติมาก
+        <b>🤖 ข้อมูลที่ใช้:</b> ข้อมูลจริงจาก clean_data.csv<br>
+        <b>🔍 โมเดล:</b> ml_models/anomaly_detection/anomaly_if_model.pkl<br>
+        Anomaly Score สูง = ผิดปกติมาก (เช่น ใช้เวลาแก้ไขนานผิดปกติ หรือเกิดในพื้นที่/เวลาที่ผิดปกติ)
         </div>
         """, unsafe_allow_html=True)
 
-        # Sample data for performance with user control
+        # Settings for data sampling
         st.markdown("##### ⚙️ การตั้งค่าการวิเคราะห์")
 
         col_setting1, col_setting2 = st.columns([2, 3])
+
+        # Use filtered data from main dashboard
+        df_for_anomaly = df_filtered.copy()
+        total_data = len(df_for_anomaly)
+
         with col_setting1:
-            total_data = len(df_filtered)
-
-            # Use percentage-based slider
-            if total_data <= 10000:
-                default_pct = 100  # Use all data if small dataset
-            elif total_data <= 100000:
-                default_pct = 50  # 50% for medium dataset
+            # Allow sampling if dataset is large
+            if total_data > 50000:
+                sample_percentage = st.slider(
+                    "เปอร์เซ็นต์ข้อมูลที่ใช้วิเคราะห์",
+                    min_value=10,
+                    max_value=100,
+                    value=50,
+                    step=10,
+                    format="%d%%",
+                    help="ข้อมูลมาก ใช้ sampling เพื่อความเร็ว"
+                )
+                sample_size = int(total_data * sample_percentage / 100)
+                sample_size = max(5000, sample_size)
+                df_for_anomaly = df_for_anomaly.sample(n=sample_size, random_state=42).copy()
             else:
-                default_pct = 10  # 10% for large dataset (e.g., 78k rows from 780k)
-
-            sample_percentage = st.slider(
-                "เปอร์เซ็นต์ข้อมูลที่ใช้วิเคราะห์",
-                min_value=1,
-                max_value=100,
-                value=default_pct,
-                step=1,
-                format="%d%%",
-                help="เปอร์เซ็นต์สูง = ละเอียดขึ้น แต่ช้าขึ้น | เปอร์เซ็นต์ต่ำ = เร็วขึ้น แต่อาจพลาดบางรายการ"
-            )
-
-            # Calculate actual sample size
-            sample_size = int(total_data * sample_percentage / 100)
-
-            # Ensure minimum sample size
-            sample_size = max(min(5000, total_data), sample_size)
+                sample_percentage = 100
 
         with col_setting2:
-            st.info(f"📊 กำลังวิเคราะห์ {sample_size:,} จาก {total_data:,} แถว ({sample_percentage}%)")
+            st.info(f"📊 ใช้ข้อมูลจริง {len(df_for_anomaly):,} รายการ จาก clean_data.csv")
 
-        # Sample data
-        df_for_anomaly = df_filtered.copy()
-        sampled = False
-        if len(df_filtered) > sample_size:
-            df_for_anomaly = df_filtered.sample(n=sample_size, random_state=42).copy()
-            sampled = True
+        # Detect anomalies
+        st.markdown("---")
+        progress_text = "กำลังตรวจจับความผิดปกติ..."
+        progress_bar = st.progress(0, text=progress_text)
 
         @st.cache_data(ttl=3600, show_spinner=False)
         def detect_anomalies_cached(_ml_int, data_hash, size):
             return _ml_int.detect_anomalies(df_for_anomaly)
 
-        # Progress indicator
-        progress_text = "กำลังเตรียมข้อมูล..."
-        progress_bar = st.progress(0, text=progress_text)
-
         try:
-            progress_bar.progress(20, text="กำลังสกัด features...")
-            data_hash = hash(str(len(df_for_anomaly)) + str(sample_size))
+            progress_bar.progress(30, text="กำลังเตรียม features...")
 
-            progress_bar.progress(40, text="กำลังประมวลผลด้วย ML model...")
-            df_with_anomalies = detect_anomalies_cached(ml_integrator, data_hash, sample_size)
+            # Create hash based on data
+            data_hash = hash(str(len(df_for_anomaly)) + str(df_for_anomaly['timestamp'].min()) + str(df_for_anomaly['timestamp'].max()))
+
+            progress_bar.progress(70, text="กำลังประมวลผลด้วย Isolation Forest model...")
+            df_with_anomalies = detect_anomalies_cached(ml_integrator, data_hash, len(df_for_anomaly))
 
             progress_bar.progress(100, text="เสร็จสิ้น!")
             progress_bar.empty()
         except Exception as e:
             progress_bar.empty()
-            st.error(f"เกิดข้อผิดพลาด: {str(e)}")
+            st.error(f"เกิดข้อผิดพลาดในการตรวจจับความผิดปกติ: {str(e)}")
             st.stop()
 
         # Anomaly statistics
@@ -598,11 +592,20 @@ def main():
             )
 
         with col3:
-            avg_anomaly_score = df_with_anomalies[df_with_anomalies['is_anomaly'] == 1]['anomaly_score'].mean()
-            st.metric(
-                "Anomaly Score เฉลี่ย",
-                f"{avg_anomaly_score:.2f}"
-            )
+            if total_anomalies > 0:
+                avg_anomaly_score = df_with_anomalies[df_with_anomalies['is_anomaly'] == 1]['anomaly_score'].mean()
+                st.metric(
+                    "Anomaly Score เฉลี่ย",
+                    f"{avg_anomaly_score:.2f}"
+                )
+            else:
+                st.metric(
+                    "Anomaly Score เฉลี่ย",
+                    "N/A"
+                )
+
+        # Data source info
+        st.info(f"ℹ️ **แหล่งข้อมูล:** ข้อมูลจริงจาก clean_data.csv ({len(df_with_anomalies):,} รายการ)")
 
         # Anomaly scatter plot
         st.subheader("📈 Anomaly Detection Timeline")
@@ -615,12 +618,16 @@ def main():
         # Anomaly table
         st.subheader("📋 รายการ Anomalies ที่ตรวจพบ (Top 50)")
         anomalies = df_with_anomalies[df_with_anomalies['is_anomaly'] == 1].copy()
-        anomalies_display = anomalies[['timestamp', 'district', 'primary_type', 'solve_days', 'anomaly_score']].sort_values(
-            'anomaly_score', ascending=False
-        ).head(50)
 
-        anomalies_display.columns = ['วันที่', 'เขต', 'ประเภท', 'ระยะเวลาแก้ (วัน)', 'Anomaly Score']
-        st.dataframe(anomalies_display, use_container_width=True, height=400)
+        if len(anomalies) > 0:
+            anomalies_display = anomalies[['timestamp', 'district', 'primary_type', 'solve_days', 'anomaly_score']].sort_values(
+                'anomaly_score', ascending=False
+            ).head(50)
+
+            anomalies_display.columns = ['วันที่', 'เขต', 'ประเภท', 'ระยะเวลาแก้ (วัน)', 'Anomaly Score']
+            st.dataframe(anomalies_display, use_container_width=True, height=400)
+        else:
+            st.info("ไม่พบความผิดปกติในข้อมูลที่เลือก")
 
     # Tab 5: Additional Analytics
     with tab5:
