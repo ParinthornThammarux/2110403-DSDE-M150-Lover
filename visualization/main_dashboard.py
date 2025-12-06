@@ -12,9 +12,11 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import folium
+import pydeck as pdk
+from viz_modules import plot_complaint_timeseries, plot_top_complaint_types
 from folium.plugins import HeatMap, MarkerCluster
 from streamlit_folium import folium_static
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 import sys
 
@@ -26,6 +28,7 @@ from viz_modules import (
     plot_complaints_by_district,
     plot_complaint_distribution_across_districts,
     plot_top_complaint_districts,
+    plot_top_complaint_types,
     plot_complaint_heatmap,
     plot_complaint_types_pie,
     plot_resolution_time_by_district,
@@ -104,22 +107,19 @@ st.markdown("""
 @st.cache_data(ttl=3600)
 def load_data():
     """
-    โหลดข้อมูล complaint จาก clean_data.csv
-
-    คำอธิบาย: อ่านข้อมูลที่ผ่านการทำความสะอาดแล้ว
-    ประมวลผลเพื่อใช้งานในระบบ รวมถึงแปลง one-hot encoding กลับเป็นค่าเดิม
+    Loading complaint data from clean_data.csv
     """
     csv_path = Path("../data/clean_data_sampled.csv")
 
     if not csv_path.exists():
-        st.error(f"ไม่พบไฟล์ข้อมูล: {csv_path}")
-        st.info("กรุณาวาง clean_data.csv ไว้ใน root directory")
+        st.error(f"File not found: {csv_path}")
+        st.info("Please place clean_data.csv in the root directory")
         st.stop()
 
     # Load CSV
     df = pd.read_csv(csv_path)
 
-    st.sidebar.info(f"โหลดข้อมูล: {len(df):,} แถว")
+    st.sidebar.info(f"Loaded data: {len(df):,} rows")
 
     # Parse type field
     def parse_types(type_str):
@@ -137,12 +137,12 @@ def load_data():
 
     # Reconstruct state from one-hot encoding
     def get_state(row):
-        if 'state_เสร็จสิ้น' in row and row.get('state_เสร็จสิ้น', 0) == 1.0:
-            return 'เสร็จสิ้น'
-        elif 'state_กำลังดำเนินการ' in row and row.get('state_กำลังดำเนินการ', 0) == 1.0:
-            return 'กำลังดำเนินการ'
-        elif 'state_รอรับเรื่อง' in row and row.get('state_รอรับเรื่อง', 0) == 1.0:
-            return 'รอรับเรื่อง'
+        if 'state_Completed' in row and row.get('state_Completed    ', 0) == 1.0:
+            return 'Completed'
+        elif 'state_In Progress' in row and row.get('state_In Progress', 0) == 1.0:
+            return 'In Progress'
+        elif 'state_Pending' in row and row.get('state_Pending', 0) == 1.0:
+            return 'Pending'
         return 'Unknown'
 
     df['state'] = df.apply(get_state, axis=1)
@@ -190,22 +190,22 @@ def load_ml_models():
 
     status_msg = []
     if rf_loaded:
-        status_msg.append("[OK] RandomForest Forecaster (New Model)")
+        status_msg.append("\n[OK] RandomForest Forecaster (New Model)")
     else:
-        status_msg.append("[ERROR] RandomForest Forecaster - MODEL REQUIRED")
-        st.sidebar.error("WARNING: Forecasting model not found! Please train the model first.")
+        status_msg.append("\n[ERROR] RandomForest Forecaster - MODEL REQUIRED")
+        st.sidebar.error("\nWARNING: Forecasting model not found! Please train the model first.")
 
     if anomaly_loaded:
-        status_msg.append("[OK] Isolation Forest Anomaly Detector")
+        status_msg.append("\n[OK] Isolation Forest Anomaly Detector")
     else:
-        status_msg.append("[WARNING] Anomaly Detector (ใช้วิธีทางสถิติ)")
+        status_msg.append("\n[WARNING] Anomaly Detector (Model not found)")
 
     if outage_loaded:
-        status_msg.append("[OK] K-Means Outage Clustering")
+        status_msg.append("\n[OK] K-Means Outage Clustering")
     else:
-        status_msg.append("[WARNING] Outage Clustering (โมเดลไม่พร้อมใช้งาน)")
+        status_msg.append("\n[WARNING] Outage Clustering (Model not found)")
 
-    st.sidebar.info("สถานะ ML Models:\n" + "\n".join(status_msg))
+    st.sidebar.info("ML Models Status:\n" + "\n".join(status_msg))
 
     return integrator
 
@@ -228,7 +228,13 @@ def create_geospatial_map(df, map_type='heatmap'):
 
     if map_type == 'heatmap':
         heat_data = [[row['lat'], row['lon']] for idx, row in df.head(10000).iterrows()]
-        HeatMap(heat_data, radius=15, blur=25, max_zoom=13).add_to(m)
+        HeatMap(heat_data, 
+            radius=20,           # Increase circle size
+            blur=30,             # Increase blur
+            max_zoom=15,         # Allow zooming in more before hiding
+            min_opacity=0.3,     # Minimum transparency (0-1)
+            gradient={0.2: 'blue', 0.3: 'green', 0.6: 'yellow', 0.7: 'orange', 1.0: 'red'}  # Custom color gradient
+        ).add_to(m)
 
     elif map_type == 'clusters':
         marker_cluster = MarkerCluster().add_to(m)
@@ -245,6 +251,36 @@ def create_geospatial_map(df, map_type='heatmap'):
                 """,
                 icon=folium.Icon(color='blue', icon='info-sign')
             ).add_to(marker_cluster)
+            
+    elif map_type == 'GridLayer':
+        # Create pydeck GridLayer
+        grid_data = df[['lat', 'lon']].head(10000).copy()
+        grid_data.columns = ['latitude', 'longitude']
+        
+        grid_layer = pdk.Layer(
+            "GridLayer",
+            data=grid_data,
+            get_position='[longitude, latitude]',
+            cell_size=100,
+            elevation_scale=20,
+            extruded=True,
+            pickable=True,
+            auto_highlight=True,
+        )
+
+        view_state = pdk.ViewState(
+            latitude=center_lat,
+            longitude=center_lon,
+            zoom=12,
+            pitch=45,
+        )
+
+        deck = pdk.Deck(
+            layers=[grid_layer], 
+            initial_view_state=view_state,
+            tooltip={'text': 'Cell count: {count}'}
+        )
+        return deck
 
     return m
 
@@ -265,7 +301,7 @@ def main():
         ml_integrator = load_ml_models()
 
     # Sidebar filters
-    st.sidebar.header("ตัวกรอง (Filters)")
+    st.sidebar.header("Filters")
 
     # Date range filter
     min_date = df['timestamp'].min().date()
@@ -273,7 +309,7 @@ def main():
 
     date_range = st.sidebar.date_input(
         "เลือกช่วงเวลา",
-        value=(min_date, max_date),
+        value=(date(2024, 10    , 1), max_date),
         min_value=min_date,
         max_value=max_date
     )
@@ -285,13 +321,6 @@ def main():
     # Complaint type filter
     types = ['All'] + sorted(df['primary_type'].unique().tolist())
     selected_type = st.sidebar.selectbox("เลือกประเภท Complaint", types)
-
-    # Map visualization type
-    map_type = st.sidebar.radio(
-        "ประเภทแผนที่",
-        ['heatmap', 'clusters'],
-        format_func=lambda x: 'Heat Map (ความหนาแน่น)' if x == 'heatmap' else 'Marker Clusters (จุดแต่ละรายการ)'
-    )
 
     # Apply filters
     df_filtered = df.copy()
@@ -361,7 +390,7 @@ def main():
 
     # Tab 1: Geospatial Analysis
     with tab1:
-        st.header("การวิเคราะห์เชิงพื้นที่")
+        st.header("Geospatial Analysis")
 
         st.markdown("""
         <div class="info-box">
@@ -370,28 +399,41 @@ def main():
         - <b>Marker Clusters:</b> แสดงรายละเอียดของแต่ละ complaint
         </div>
         """, unsafe_allow_html=True)
+        
+        # Map visualization type
+        st.subheader("Map Visualization Type")
+        map_type = st.radio(
+            "Choose map type",
+            ['heatmap', 'clusters', 'GridLayer'],
+            format_func=lambda x: 'Heat Map (ความหนาแน่น)' if x == 'heatmap' else 'Marker Clusters (จุดแต่ละรายการ)' if x == 'clusters' else 'Grid Layer (3D Grid Visualization)'
+        )
+        st.markdown("---")
 
-        with st.spinner("กำลังสร้างแผนที่..."):
-            m = create_geospatial_map(df_filtered, map_type=map_type)
-            folium_static(m, width=1400, height=600)
+        with st.spinner("Loading map..."):
+            if map_type == 'GridLayer':
+                result = create_geospatial_map(df_filtered, map_type=map_type)
+                st.pydeck_chart(result)
+            else:
+                m = create_geospatial_map(df_filtered, map_type=map_type)
+                folium_static(m, width=1400, height=600)
 
         # District statistics table
-        st.subheader("สถิติแต่ละเขต")
+        st.subheader("District Statistics")
         district_stats = df_filtered.groupby('district').agg({
             'lat': 'count',
             'solve_days': 'mean',
         }).round(2)
-        district_stats.columns = ['จำนวน Complaint', 'เวลาแก้ปัญหาเฉลี่ย (วัน)']
-        district_stats = district_stats.sort_values('จำนวน Complaint', ascending=False)
+        district_stats.columns = ['Number of Complaints', 'Average Resolution Time (days)']
+        district_stats = district_stats.sort_values('Number of Complaints', ascending=False)
 
         st.dataframe(district_stats, use_container_width=True, height=400)
 
     # Tab 2: District and Type Analysis
     with tab2:
-        st.header("วิเคราะห์เขตและประเภท Complaint")
+        st.header("District and Type Analysis")
 
-        # Top districts
-        st.subheader("เขตที่มี Complaint มากที่สุด")
+        # 1.) Top districts
+        st.subheader("Top Districts by Number of Complaints")
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> จัดอันดับเขตที่มีจำนวน complaint สูงสุด ช่วยระบุพื้นที่ที่ต้องให้ความสนใจเป็นพิเศษ
@@ -399,12 +441,11 @@ def main():
         """, unsafe_allow_html=True)
 
         top_n = st.slider("จำนวนเขตที่ต้องการแสดง", 5, 30, 15, key="top_districts")
+        st.subheader(f"Top {top_n} Districts by Number of Complaints")
         st.plotly_chart(plot_top_complaint_districts(df_filtered, top_n), use_container_width=True)
-
-        st.markdown("---")
-
-        # Complaints by district
-        st.subheader("แต่ละเขตมี Complaint อะไรบ้าง จำนวนเท่าไหร่")
+        
+        # 2.) Complaints by district
+        st.subheader("Complaints by District")
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> แสดงการกระจายของ complaint แต่ละประเภทในแต่ละเขต
@@ -423,9 +464,15 @@ def main():
         st.plotly_chart(plot_complaints_by_district(df_filtered, complaint_filter_1), use_container_width=True)
 
         st.markdown("---")
+        
+        
+        # 3.) Additional visualizations
+        st.subheader("Top Complaint Types")
+        st.plotly_chart(plot_top_complaint_types(df_filtered, top_n=15), use_container_width=True)
 
-        # Complaint distribution across districts
-        st.subheader("แต่ละ Complaint มีในเขตไหนบ้าง เขตละเท่าไหร่")
+
+        # 4.) Complaint distribution across districts
+        st.subheader("Complaint Distribution Across Districts")
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> แสดงว่า complaint แต่ละประเภทเกิดขึ้นในเขตใดบ้าง
@@ -445,36 +492,71 @@ def main():
 
         st.markdown("---")
 
-        # Additional visualizations
+        # 5.) Time series: complaints over time with filters
+        st.subheader("Time Series: จำนวน Complaint ตามเวลา")
+
+        st.markdown("""
+        <div class="info-box">
+        <b>คำอธิบาย:</b> แสดงจำนวน complaint ต่อวัน โดยสามารถเลือกช่วงเวลาและจังหวัดได้ 
+        เพื่อดูแนวโน้มการเกิดปัญหาในช่วงต่าง ๆ
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Ensure timestamp/date are in proper format
+        df_ts = df_filtered.copy()
+        if "timestamp" in df_ts.columns:
+            # Always try to convert to datetime, safe even if already datetime
+            df_ts["timestamp"] = pd.to_datetime(df_ts["timestamp"], errors="coerce")
+            min_date = df_ts["timestamp"].dt.date.min()
+            max_date = df_ts["timestamp"].dt.date.max()
+        else:
+            df_ts["date"] = pd.to_datetime(df_ts["date"], errors="coerce")
+            min_date = df_ts["date"].dt.date.min()
+            max_date = df_ts["date"].dt.date.max()
+
+
+        # UI controls for time series (in main area, not sidebar)
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("สัดส่วนประเภท Complaint")
-            st.plotly_chart(plot_complaint_types_pie(df_filtered), use_container_width=True)
+            date_range = st.date_input(
+                "Select date range",
+                value=(min_date, max_date),
+                min_value=min_date,
+                max_value=max_date
+            )
 
         with col2:
-            st.subheader("สถานะการดำเนินการ")
-            st.plotly_chart(plot_state_distribution(df_filtered), use_container_width=True)
+            if "province" in df_ts.columns:
+                province_options = sorted(df_ts["province"].dropna().unique())
+                selected_provinces = st.multiselect(
+                    "Select provinces",
+                    options=province_options,
+                    default=province_options  # show all by default
+                )
+            else:
+                selected_provinces = None
 
-        # Heatmap
-        st.subheader("Heatmap: ความเข้มของ Complaint ตามเวลา")
-        st.markdown("""
-        <div class="info-box">
-        <b>คำอธิบาย:</b> แสดงแนวโน้มของ complaint ในแต่ละเขตตามช่วงเวลา
-        ช่วยระบุรูปแบบตามฤดูกาลหรือช่วงเวลาที่มีปัญหามากเป็นพิเศษ
-        </div>
-        """, unsafe_allow_html=True)
-        st.plotly_chart(plot_complaint_heatmap(df_filtered), use_container_width=True)
+        # Apply filters
+        start_date, end_date = date_range
+        if "timestamp" in df_ts.columns:
+            df_ts = df_ts[
+                (df_ts["timestamp"].dt.date >= start_date)
+                & (df_ts["timestamp"].dt.date <= end_date)
+            ]
+        else:
+            df_ts = df_ts[
+                (df_ts["date"].dt.date >= start_date)
+                & (df_ts["date"].dt.date <= end_date)
+            ]
 
-        # Resolution time
-        st.subheader("ระยะเวลาในการแก้ปัญหาแต่ละเขต")
-        st.markdown("""
-        <div class="info-box">
-        <b>คำอธิบาย:</b> แสดงการกระจายของเวลาที่ใช้ในการแก้ปัญหาในแต่ละเขต
-        ช่วยระบุเขตที่มีประสิทธิภาพในการแก้ปัญหา
-        </div>
-        """, unsafe_allow_html=True)
-        st.plotly_chart(plot_resolution_time_by_district(df_filtered), use_container_width=True)
+        if selected_provinces is not None and len(selected_provinces) > 0:
+            df_ts = df_ts[df_ts["province"].isin(selected_provinces)]
+
+        if df_ts.empty:
+            st.warning("ไม่มีข้อมูลในช่วงวันที่และจังหวัดที่เลือก")
+        else:
+                st.plotly_chart(plot_complaint_timeseries(df_ts), use_container_width=True)
 
     # Tab 3: Forecasting
     with tab3:
@@ -690,68 +772,67 @@ def main():
 
     # Tab 5: Outage Clustering
     with tab5:
-        st.header("การจัดกลุ่มพฤติกรรมไฟดับด้วย K-Means Clustering")
+        st.header("K-Means Clustering: การจัดกลุ่มเหตุการณ์ไฟดับ")
 
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> ใช้โมเดล K-Means ในการจัดกลุ่มเหตุการณ์ไฟดับตามพฤติกรรมที่คล้ายกัน<br>
-        <b>ข้อมูลที่ใช้:</b> ข้อมูลการไฟดับจาก clean_scraping_data.csv<br>
-        <b>โมเดล:</b> ml_models/outage_model/models/outage_kmeans_model.pkl<br>
+        <b>ข้อมูลที่ใช้:</b> MEA <br>
+        <b>Model:</b> K-Means Clustering <br>
         <b>Features:</b> วันในสัปดาห์, เขต, อุณหภูมิ, ปริมาณฝน, ความเร็วลม, เวลาเริ่ม, ระยะเวลา
         </div>
         """, unsafe_allow_html=True)
 
         if ml_integrator.outage_model is None:
-            st.warning("WARNING: โมเดล K-Means Clustering ไม่พร้อมใช้งาน")
-            st.info("กรุณา train โมเดลโดยรันไฟล์: `ml_models/outage_model/train_outage_model.py`")
+            st.warning("WARNING: K-Means Clustering model is not available")
+            st.info("Please train the model by running: `ml_models/outage_model/train_outage_model.py`")
         else:
             # Load outage data with clusters
             outage_data_path = Path("../ml_models/outage_model/models/power_outage_with_clusters.csv")
 
             if not outage_data_path.exists():
-                st.error(f"ไม่พบไฟล์ข้อมูลคลัสเตอร์: {outage_data_path}")
-                st.info("กรุณา train โมเดลก่อนเพื่อสร้างไฟล์ข้อมูลคลัสเตอร์")
+                st.error(f"Cluster data file not found: {outage_data_path}")
+                st.info("Please train the model first to generate the cluster data file")
             else:
-                with st.spinner("กำลังโหลดข้อมูลคลัสเตอร์..."):
+                with st.spinner("Loading cluster data..."):
                     df_outage = pd.read_csv(outage_data_path)
 
-                st.success(f"โหลดข้อมูลเรียบร้อย: {len(df_outage):,} เหตุการณ์ไฟดับ")
+                st.success(f"Loaded data successfully: {len(df_outage):,} power outage events")
 
                 # Show key metrics
-                st.markdown("### สถิติรวม")
+                st.markdown("### Summary Statistics")
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
-                    st.metric("จำนวนคลัสเตอร์", f"{df_outage['cluster'].nunique()}")
+                    st.metric("Number of Clusters", f"{df_outage['cluster'].nunique()}")
 
                 with col2:
                     avg_duration = df_outage['duration'].mean()
-                    st.metric("ระยะเวลาเฉลี่ย", f"{avg_duration:.0f} นาที")
-
+                    st.metric("Average Duration", f"{avg_duration:.0f} minutes")
                 with col3:
                     total_outages = len(df_outage)
-                    st.metric("เหตุการณ์ทั้งหมด", f"{total_outages:,}")
+                    st.metric("Total Outages", f"{total_outages:,}")
 
                 with col4:
                     unique_districts = df_outage['district'].nunique()
-                    st.metric("จำนวนเขต", f"{unique_districts}")
+                    st.metric("Number of Districts", f"{unique_districts}")
 
                 st.markdown("---")
 
                 # Cluster distribution
-                st.subheader("การกระจายของเหตุการณ์ในแต่ละคลัสเตอร์")
+                st.subheader("Distribution of Outages by Cluster")
                 st.plotly_chart(plot_cluster_distribution(df_outage), use_container_width=True)
 
                 st.markdown("---")
 
                 # Cluster characteristics
-                st.subheader("ลักษณะเฉลี่ยของแต่ละคลัสเตอร์")
+                st.subheader("Average Characteristics of Each Cluster")
                 st.plotly_chart(plot_cluster_characteristics(df_outage), use_container_width=True)
 
                 st.markdown("---")
 
                 # Time patterns
-                st.subheader("รูปแบบเวลาของไฟดับ")
+                st.subheader("Time Patterns of Power Outages by Cluster")
                 st.plotly_chart(plot_cluster_by_time(df_outage), use_container_width=True)
 
                 st.markdown("---")
@@ -760,27 +841,27 @@ def main():
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    st.subheader("การกระจายตามเขต")
+                    st.subheader("Geographic Distribution")
                     st.plotly_chart(plot_cluster_by_district(df_outage), use_container_width=True)
 
                 with col2:
-                    st.subheader("การกระจายตามวัน")
+                    st.subheader("Distribution by Day of Week")
                     st.plotly_chart(plot_cluster_by_day(df_outage), use_container_width=True)
 
                 st.markdown("---")
 
                 # Weather correlation
-                st.subheader("ความสัมพันธ์กับสภาพอากาศ")
+                st.subheader("Weather Correlation with Clusters")
                 st.plotly_chart(plot_cluster_weather_correlation(df_outage), use_container_width=True)
 
                 st.markdown("---")
 
                 # Cluster details
-                st.subheader("รายละเอียดแต่ละคลัสเตอร์")
+                st.subheader("Detailed Cluster Analysis")
 
                 clusters = sorted(df_outage['cluster'].unique())
                 selected_cluster = st.selectbox(
-                    "เลือกคลัสเตอร์ที่ต้องการดูรายละเอียด",
+                    "Select a cluster to view details",
                     clusters,
                     format_func=lambda x: f"Cluster {x}"
                 )
@@ -788,7 +869,7 @@ def main():
                 render_cluster_summary(df_outage, selected_cluster)
 
                 # Show sample data
-                with st.expander("ดูข้อมูลตัวอย่างของคลัสเตอร์ที่เลือก"):
+                with st.expander("View sample data of the selected cluster"):
                     cluster_sample = df_outage[df_outage['cluster'] == selected_cluster].head(20)
                     display_cols = ['date', 'day_of_week', 'district', 'start', 'end',
                                    'duration', 'temp', 'rain', 'wind_gust', 'cluster']

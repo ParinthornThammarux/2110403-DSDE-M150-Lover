@@ -394,3 +394,182 @@ def plot_state_distribution(df: pd.DataFrame) -> go.Figure:
     )
 
     return fig
+
+
+def plot_top_complaint_types(df: pd.DataFrame, top_n: int = 20) -> go.Figure:
+    """
+    กราฟประเภท complaint ไหนมากสุด
+
+    คำอธิบาย: จัดอันดับประเภท complaint ที่มีจำนวนมากที่สุด
+    ช่วยระบุประเภทปัญหาที่ต้องให้ความสนใจเป็นพิเศษ
+    """
+    type_counts = df['primary_type'].value_counts().head(top_n)
+
+    # Calculate percentage
+    total = len(df)
+    percentages = (type_counts / total * 100).round(2)
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(
+        x=type_counts.index,
+        y=type_counts.values,
+        text=[f'{count:,}<br>({pct}%)' for count, pct in zip(type_counts.values, percentages.values)],
+        textposition='outside',
+        marker=dict(
+            color=type_counts.values,
+            colorscale='Reds',
+            showscale=True,
+            colorbar=dict(title='จำนวน')
+        ),
+        hovertemplate='<b>%{x}</b><br>จำนวน: %{y:,}<extra></extra>'
+    ))
+
+    fig.update_layout(
+        title=f'Top {top_n} ประเภท Complaint ที่มากที่สุด',
+        xaxis_title='ประเภท Complaint',
+        yaxis_title='จำนวน Complaint',
+        template='plotly_white',
+        height=500,
+        xaxis_tickangle=-45
+    )
+
+    return fig
+
+def plot_top_complaint_types(df: pd.DataFrame, top_n: int = 20) -> go.Figure:
+    """
+    กราฟประเภท complaint ไหนมากสุด
+
+    คำอธิบาย: จัดอันดับประเภท complaint ที่มีจำนวนมากที่สุด
+    ช่วยระบุประเภทปัญหาที่ต้องให้ความสนใจเป็นพิเศษ
+    """
+    type_counts = df['primary_type'].value_counts().head(top_n)
+
+    # Calculate percentage
+    total = len(df)
+    percentages = (type_counts / total * 100).round(2)
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(
+        x=type_counts.index,
+        y=type_counts.values,
+        text=[f'{count:,}<br>({pct}%)' for count, pct in zip(type_counts.values, percentages.values)],
+        textposition='outside',
+        marker=dict(
+            color=type_counts.values,
+            colorscale='Reds',
+            showscale=True,
+            colorbar=dict(title='จำนวน')
+        ),
+        hovertemplate='<b>%{x}</b><br>จำนวน: %{y:,}<extra></extra>'
+    ))
+
+    fig.update_layout(
+        title=f'Top {top_n} ประเภท Complaint ที่มากที่สุด',
+        xaxis_title='ประเภท Complaint',
+        yaxis_title='จำนวน Complaint',
+        template='plotly_white',
+        height=500,
+        xaxis_tickangle=-45
+    )
+
+    return fig
+
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+
+def plot_complaint_timeseries(df: pd.DataFrame) -> go.Figure:
+    """
+    Time series of complaints per day by province.
+
+    Explanation:
+    - Convert timestamp/date to proper datetime
+    - Group by date and province (if available)
+    - Plot number of complaints per day
+    """
+    # If no data after filtering, return an empty figure with message
+    if df.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            title="No data available for selected filters",
+            template="plotly_white"
+        )
+        return fig
+
+    # Work on a local copy to avoid modifying original df
+    df_local = df.copy()
+
+    # ----------------------------------------------------
+    # 1) Ensure we have a 'date' column in datetime.date
+    # ----------------------------------------------------
+    if "timestamp" in df_local.columns:
+        # Always try to convert to datetime (safe even if already datetime)
+        df_local["timestamp"] = pd.to_datetime(df_local["timestamp"], errors="coerce")
+        df_local["date"] = df_local["timestamp"].dt.date
+    elif "date" in df_local.columns:
+        df_local["date"] = pd.to_datetime(df_local["date"], errors="coerce").dt.date
+    else:
+        raise ValueError("Dataframe must have 'timestamp' or 'date' column for time series plot.")
+
+    # Drop rows where date is NaT/NaN
+    df_local = df_local.dropna(subset=["date"])
+
+    # ----------------------------------------------------
+    # 2) Group by date and province (if exists)
+    # ----------------------------------------------------
+    if "province" in df_local.columns:
+        grouped = (
+            df_local.groupby(["date", "province"])
+                    .size()
+                    .reset_index(name="count")
+        )
+        color_col = "province"
+    else:
+        grouped = (
+            df_local.groupby(["date"])
+                    .size()
+                    .reset_index(name="count")
+        )
+        color_col = None
+
+    # ----------------------------------------------------
+    # 3) Plot line chart (with or without province color)
+    # ----------------------------------------------------
+    if grouped.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            title="No data available for selected filters",
+            template="plotly_white"
+        )
+        return fig
+
+    if color_col:
+        fig = px.line(
+            grouped,
+            x="date",
+            y="count",
+            color=color_col,
+            markers=True,
+            title="Daily complaints by province",
+        )
+    else:
+        fig = px.line(
+            grouped,
+            x="date",
+            y="count",
+            markers=True,
+            title="Daily complaints",
+        )
+
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Number of complaints",
+        template="plotly_white",
+        hovermode="x unified",
+        height=450,
+    )
+
+    return fig
