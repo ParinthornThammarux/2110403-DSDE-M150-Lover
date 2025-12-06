@@ -1,265 +1,234 @@
-# Urban Issue Forecasting Visualization
+# 🏙️ Urban Issue Forecasting Dashboard
 
-Interactive visualization tools for Bangkok Traffy complaint data analysis, including geospatial dashboards and network graph analysis.
+ระบบวิเคราะห์และพยากรณ์ปัญหาเขตกรุงเทพมหานคร
+Bangkok Traffy Complaint Analysis & Prediction System
 
-## Features
+## 📋 คำอธิบายระบบ
 
-### 1. Interactive Dashboard (`dashboard/app.py`)
-- **Geospatial Analysis**: Interactive maps with heatmaps and marker clusters
-- **Time Series Analysis**: Historical complaint trends with moving averages
-- **Forecasting**: 30-day ahead predictions with confidence intervals
-- **Analytics**: District heatmaps, category distributions, resolution time analysis
-- **Anomaly Detection**: Identification of unusual complaint patterns
+Dashboard นี้เป็นระบบวิเคราะห์ข้อมูล complaint จากกรุงเทพมหานครแบบ Interactive โดยใช้ Streamlit เป็น framework หลัก รวมถึงการใช้ Machine Learning models ในการพยากรณ์และตรวจจับความผิดปกติ
 
-### 2. Interactive Network Analysis Dashboard (`dashboard/network_app.py`) **NEW!**
-- **Interactive Network Visualization**: Real-time interactive network graphs with Pyvis
-- **Complaint Co-occurrence Network**: Visualizes relationships between complaint types
-- **Organization Collaboration Network**: Shows organizations handling similar issues
-- **Community Detection**: Visual identification of related clusters
-- **Multiple Layouts**: Spring, Kamada-Kawai, Circular, Random layouts
-- **Centrality Analysis**: Degree, Betweenness, Closeness, PageRank metrics
-- **Degree Distribution**: Statistical analysis with log-log plots
-- **Full Customization**: Adjust node sizes, spacing, colors, edge visibility
+### ✨ Features หลัก
 
-### 3. Graph Network Analysis Script (`graphs/network_analysis.py`)
-- **Batch Processing**: Generate all network visualizations at once
-- **Static Outputs**: PNG images with matplotlib
-- **Interactive HTML**: Standalone HTML files with Plotly
-- **Data Exports**: GraphML, GML, edge list formats
+1. **แผนที่ภูมิศาสตร์ (Geospatial Analysis)**
+   - Heat Map แสดงความหนาแน่นของ complaint
+   - Marker Clusters แสดงรายละเอียดแต่ละจุด
 
-## Prerequisites
+2. **วิเคราะห์เขตและประเภท Complaint**
+   - กราฟแต่ละเขตมี complaint อะไรบ้าง จำนวนเท่าไหร่
+   - กราฟแต่ละ complaint มีในเขตไหนบ้าง เขตละเท่าไหร่
+   - กราฟเขตไหน complaint เยอะสุด
+   - Heatmap ความเข้มของ complaint ตามเวลา
+   - สัดส่วนประเภท complaint และสถานะการดำเนินการ
+   - ระยะเวลาในการแก้ปัญหาแต่ละเขต
 
-- Python 3.11 or higher
-- `clean_data.csv` in the project root directory
+3. **การพยากรณ์ด้วย ML (RandomForest)**
+   - พยากรณ์จำนวน complaint ในอนาคต 7-60 วัน
+   - แสดง confidence interval
+   - เปรียบเทียบกับข้อมูลจริง
 
-## Installation
+4. **การตรวจจับความผิดปกติด้วย ML (Isolation Forest)**
+   - ตรวจจับ complaint ที่มีพฤติกรรมผิดปกติ
+   - แสดง anomaly score
+   - วิเคราะห์การกระจายของ anomalies
 
-### Step 1: Install Dependencies
+5. **การวิเคราะห์เพิ่มเติม**
+   - รูปแบบการรายงาน complaint ตามช่วงเวลาในวัน
+   - รูปแบบตามวันในสัปดาห์
+   - เปรียบเทียบแนวโน้มแต่ละเขต
+   - สถิติสรุปต่างๆ
 
-From the `visualization/` directory:
+## 🗂️ โครงสร้างไฟล์
+
+```
+visualization/dashboard/
+├── main_dashboard.py          # ไฟล์หลักสำหรับรัน dashboard
+├── viz_modules.py             # Module สำหรับ visualization functions
+├── ml_integration.py          # Module สำหรับ ML model integration
+└── README.md                  # คู่มือการใช้งาน
+```
+
+## 📦 Dependencies
+
+ติดตั้ง packages ที่จำเป็น:
+
+```bash
+pip install streamlit pandas numpy plotly folium streamlit-folium scikit-learn joblib
+```
+
+หรือถ้ามี requirements.txt:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Or install globally from project root:
+## 🚀 วิธีการรัน
+
+### วิธีที่ 1: รันจาก root directory (แนะนำ)
 
 ```bash
-pip install -r visualization/requirements.txt
+streamlit run visualization/dashboard/main_dashboard.py
 ```
 
-### Step 2: Verify Data File
-
-Ensure `clean_data.csv` exists in the project root:
+### วิธีที่ 2: รันจากภายใน dashboard directory
 
 ```bash
-ls ../clean_data.csv
+cd visualization/dashboard
+streamlit run main_dashboard.py
 ```
 
-If missing, generate it using the `clean_data.ipynb` notebook.
+**หมายเหตุ:** ต้องมีไฟล์ `clean_data.csv` อยู่ใน root directory ของโปรเจค
 
-## Usage
+## 📊 ข้อมูลที่ใช้
 
-### Running the Interactive Dashboard
+- **ไฟล์ข้อมูล:** `clean_data.csv` (780,000+ rows)
+- **ML Models:**
+  - `ml_models/forecasting/models/rf_forecaster.pkl` - RandomForest Forecaster
+  - `ml_models/anomaly_detection/anomaly_if_model.pkl` - Isolation Forest Anomaly Detector
 
-From the **project root directory**:
+## 🎛️ การใช้งาน Dashboard
 
-```bash
-streamlit run visualization/dashboard/app.py
+### Sidebar Filters
+
+1. **เลือกช่วงเวลา** - กรองข้อมูลตามวันที่
+2. **เลือกเขต** - กรองเฉพาะเขตที่ต้องการ
+3. **เลือกประเภท Complaint** - กรองเฉพาะประเภทที่ต้องการ
+4. **ประเภทแผนที่** - เลือกระหว่าง Heat Map หรือ Marker Clusters
+
+### Tab Navigation
+
+1. **🗺️ แผนที่ภูมิศาสตร์**
+   - ดูการกระจายตัวของ complaint บนแผนที่
+   - ตารางสถิติแต่ละเขต
+
+2. **📊 วิเคราะห์เขตและประเภท**
+   - กราฟ Top เขตที่มี complaint มากที่สุด
+   - กราฟแต่ละเขตมี complaint อะไรบ้าง (มี filter เลือกประเภทได้)
+   - กราฟแต่ละ complaint มีในเขตไหนบ้าง (มี filter เลือกเขตได้)
+   - Pie chart สัดส่วนประเภท complaint
+   - Pie chart สถานะการดำเนินการ
+   - Heatmap ความเข้มตามเวลา
+   - Box plot ระยะเวลาแก้ปัญหา
+
+3. **🤖 ML: การพยากรณ์**
+   - เลือกจำนวนวันที่ต้องการพยากรณ์ (7-60 วัน)
+   - ดูกราฟการพยากรณ์พร้อม confidence interval
+   - ดูสถิติการพยากรณ์
+   - Export ข้อมูลการพยากรณ์
+
+4. **⚠️ ML: การตรวจจับความผิดปกติ**
+   - ดูจำนวน anomalies ที่ตรวจพบ
+   - กราฟ timeline ของ anomalies
+   - การกระจายของ anomalies ตามเขตและประเภท
+   - ตารางรายละเอียด anomalies
+
+5. **📈 การวิเคราะห์เพิ่มเติม**
+   - รูปแบบการรายงานตามช่วงเวลา
+   - เปรียบเทียบแนวโน้มแต่ละเขต (เลือกเขตได้)
+   - สถิติสรุปต่างๆ
+
+## 🔧 การปรับแต่ง
+
+### เปลี่ยนจำนวนข้อมูลที่แสดงบนแผนที่
+
+แก้ไขใน `main_dashboard.py`:
+
+```python
+# Heatmap
+heat_data = [[row['lat'], row['lon']] for idx, row in df.head(10000).iterrows()]
+
+# Marker Clusters
+for idx, row in df.head(1000).iterrows():
 ```
 
-The dashboard will open in your browser at `http://localhost:8501`
+### เปลี่ยนจำนวน Top items ที่แสดง
 
-#### Dashboard Features:
+ปรับค่า `top_n` parameter ใน visualization functions
 
-**Sidebar Filters:**
-- Date range selection
-- District filter
-- Complaint type filter
-- Map visualization mode (heatmap/clusters)
+### ปรับแต่งสี Theme
 
-**Tabs:**
-1. **🗺️ Geospatial Analysis**: Interactive map with district statistics
-2. **📊 Time Series & Forecasting**: Historical trends and 30-day predictions
-3. **📈 Analytics**: Category distributions, heatmaps, resolution times
-4. **🔍 Anomaly Detection**: Unusual complaints based on resolution time
+แก้ไขใน CSS section ของ `main_dashboard.py`
 
-### Running Interactive Network Analysis Dashboard
+## 📝 คำอธิบายแต่ละ Visualization
 
-From the **project root directory**:
+### 1. กราฟแต่ละเขตมี complaint อะไรบ้าง (`plot_complaints_by_district`)
+แสดงจำนวน complaint แยกตามประเภทในแต่ละเขต (stacked bar chart)
+ช่วยให้เห็นว่าแต่ละเขตมีปัญหาประเภทใดบ้าง และปัญหาไหนที่พบมากที่สุด
 
-```bash
-streamlit run visualization/dashboard/network_app.py
-```
+### 2. กราฟแต่ละ complaint มีในเขตไหนบ้าง (`plot_complaint_distribution_across_districts`)
+แสดงการกระจายตัวของแต่ละประเภท complaint ในแต่ละเขต
+ช่วยระบุว่าปัญหาแต่ละประเภทเกิดในเขตใดบ้าง
 
-Opens at `http://localhost:8502` (different port from main dashboard)
+### 3. กราฟเขตไหน complaint เยอะสุด (`plot_top_complaint_districts`)
+จัดอันดับเขตที่มีจำนวน complaint มากที่สุด พร้อมแสดงเปอร์เซ็นต์
+ช่วยระบุพื้นที่ที่ต้องให้ความสนใจเป็นพิเศษ
 
-#### Network Dashboard Features:
+### 4. Heatmap ความเข้มตามเวลา (`plot_complaint_heatmap`)
+แสดงแนวโน้มของ complaint ตามเวลาในแต่ละเขต
+ช่วยระบุรูปแบบตามฤดูกาลหรือช่วงเวลาที่มีปัญหามากเป็นพิเศษ
 
-**Network Selection:**
-- Complaint Type Co-occurrence Network
-- Organization Collaboration Network
+### 5. ML Forecasting (`plot_forecast_visualization`)
+ใช้โมเดล RandomForest พยากรณ์จำนวน complaint ในอนาคต
+แสดงเส้นข้อมูลจริง ค่าพยากรณ์ และ confidence interval
 
-**Visualization Controls:**
-- Layout algorithms (Spring, Kamada-Kawai, Circular, Random)
-- Node sizing by centrality metrics
-- Adjustable graph size and spacing
-- Edge visibility toggle
-- Community detection with color coding
+### 6. Anomaly Detection (`plot_anomaly_scatter`, `plot_anomaly_distribution`)
+ใช้โมเดล Isolation Forest ตรวจจับ complaint ที่มีพฤติกรรมผิดปกติ
+เช่น ใช้เวลาแก้ปัญหานานผิดปกติ หรือเกิดในพื้นที่/เวลาที่ไม่ปกติ
 
-**Analysis Tab:**
-- Basic network statistics (nodes, edges, density, diameter)
-- Top central nodes by multiple metrics
-- Degree distribution plots (linear and log-log)
-- Complete centrality analysis table
-- Community analysis with members list
-- Downloadable CSV exports
+## 🤖 ML Models
 
-### Running Network Analysis Script (Batch Mode)
+### RandomForest Forecaster
+- **ไฟล์:** `ml_models/forecasting/models/rf_forecaster.pkl`
+- **ใช้สำหรับ:** พยากรณ์จำนวน complaint ในอนาคต
+- **Features:** day_of_week, month, day
+- **Output:** จำนวน complaint ที่คาดว่าจะเกิดขึ้นในแต่ละวัน
 
-From the **project root directory**:
+### Isolation Forest Anomaly Detector
+- **ไฟล์:** `ml_models/anomaly_detection/anomaly_if_model.pkl`
+- **ใช้สำหรับ:** ตรวจจับ complaint ที่มีพฤติกรรมผิดปกติ
+- **Features:** hour, day_of_week, month, lat, lon, solve_days, type categories, district_daily_count
+- **Output:** anomaly score (0-1) และ is_anomaly (0/1)
 
-```bash
-python visualization/graphs/network_analysis.py
-```
+## ⚠️ Troubleshooting
 
-#### Output Files:
+### ปัญหา: ไม่พบไฟล์ clean_data.csv
+**แก้ไข:** ตรวจสอบว่าไฟล์อยู่ใน root directory และรัน streamlit จาก root
 
-**Static Images (PNG):**
-- `visualization/graphs/outputs/complaint_type_co-occurrence_network.png`
-- `visualization/graphs/outputs/organization_collaboration_network.png`
+### ปัญหา: ML models ไม่โหลด
+**แก้ไข:** ระบบจะใช้วิธีสำรองโดยอัตโนมัติ
+- Forecasting: ใช้การพยากรณ์จำลองจาก historical patterns
+- Anomaly Detection: ใช้วิธีทางสถิติ (Z-score)
 
-**Interactive HTML:**
-- `visualization/graphs/outputs/interactive_complaint_network_interactive.html`
-- `visualization/graphs/outputs/interactive_organization_network_interactive.html`
+### ปัญหา: Dashboard ช้า
+**แก้ไข:**
+- ลดจำนวนข้อมูลที่แสดงบนแผนที่
+- เพิ่ม filter เพื่อลดจำนวนข้อมูล
+- ใช้ date range ที่แคบลง
 
-**Graph Data Exports:**
-- `visualization/graphs/outputs/*.graphml` (GraphML format)
-- `visualization/graphs/outputs/*.gml` (GML format)
-- `visualization/graphs/outputs/*_edges.txt` (Edge list)
+### ปัญหา: Memory Error
+**แก้ไข:** กรองข้อมูลให้น้อยลง หรือเพิ่ม RAM ของเครื่อง
 
-### Integration with Forecasting Model
+## 📈 Performance Tips
 
-The dashboard automatically integrates with the forecasting model:
+1. ใช้ date range filter เพื่อลดจำนวนข้อมูล
+2. เลือกเขตหรือประเภทเฉพาะที่สนใจ
+3. Dashboard มี caching อัตโนมัติสำหรับ data loading
+4. กรณี data เปลี่ยนแปลง กด 'c' แล้ว Enter เพื่อ clear cache
 
-1. If `ml_models/forecasting/outputs/forecast_predictions.csv` exists, it will be used
-2. Otherwise, simulated forecast data is generated for demonstration
+## 👥 Credits
 
-To use real forecasts:
+**DSDE M150-Lover Team**
+- Chulalongkorn University
+- Data Engineering & Data Science Project
 
-```bash
-# Train the model first
-python ml_models/forecasting/train_lstm_model.py
+**Data Source:** Bangkok Traffy Fondue
+**Framework:** Streamlit
+**ML Libraries:** scikit-learn
+**Visualization:** Plotly, Folium
 
-# Then run the dashboard
-streamlit run visualization/dashboard/app.py
-```
+## 📄 License
 
-## Project Structure
+This project is for educational purposes.
 
-```
-visualization/
-├── README.md                    # This file
-├── requirements.txt             # Python dependencies
-├── dashboard/
-│   └── app.py                   # Streamlit dashboard application
-├── graphs/
-│   ├── network_analysis.py      # Graph network visualization
-│   └── outputs/                 # Generated visualizations
-│       ├── *.png                # Static network images
-│       ├── *.html               # Interactive visualizations
-│       ├── *.graphml            # Graph data exports
-│       ├── *.gml
-│       └── *_edges.txt
-└── ...
-```
+---
 
-## Data Format
-
-The visualization tools expect `clean_data.csv` with the following columns:
-
-**Required:**
-- `type`: Complaint types (e.g., `{น้ำท่วม,ร้องเรียน}`)
-- `organization`: Handling organization
-- `timestamp`: Datetime of complaint
-- `lat`, `lon`: Coordinates
-- `district`, `subdistrict`: Location
-- `solve_days`: Days to resolve
-- `state_*`: One-hot encoded status columns
-- `star_*`: One-hot encoded rating columns
-
-## Troubleshooting
-
-### Issue: "Data file not found"
-**Solution:** Ensure `clean_data.csv` is in the project root, not in the `visualization/` directory.
-
-### Issue: "No module named 'streamlit'"
-**Solution:** Install requirements: `pip install -r visualization/requirements.txt`
-
-### Issue: Map not displaying
-**Solution:**
-- Check that `lat` and `lon` columns have valid coordinates
-- Ensure data is filtered to Bangkok region (lat ~13.7, lon ~100.5)
-
-### Issue: Graph visualization empty
-**Solution:**
-- Ensure `type` column has multi-label complaints in `{type1,type2}` format
-- Check that there are co-occurring complaint types in the data
-
-### Issue: "Port 8501 already in use"
-**Solution:** Stop other Streamlit instances or use a different port:
-```bash
-streamlit run visualization/dashboard/app.py --server.port 8502
-```
-
-## Performance Tips
-
-1. **Large Datasets**: The dashboard limits map markers to 5,000 points for performance
-2. **Date Filtering**: Use date range filters to analyze specific time periods
-3. **Network Analysis**: Focuses on top 30 complaint types and well-connected organizations
-4. **Browser**: Chrome or Firefox recommended for best interactive visualization performance
-
-## Examples
-
-### Dashboard Screenshots
-
-**Key Metrics:**
-- Total complaints, average resolution time, completion rate, anomaly rate
-
-**Geospatial View:**
-- Heatmap showing complaint density across Bangkok
-- Marker clusters for detailed location view
-
-**Time Series:**
-- Historical complaint trends with 7-day moving average
-- 30-day forecast with confidence intervals
-
-**Analytics:**
-- Top 15 complaint types distribution
-- District vs month intensity heatmap
-- Resolution time by complaint type
-
-### Network Analysis Output
-
-**Complaint Network:**
-- Nodes: Complaint types
-- Edges: Co-occurrence relationships
-- Communities: Related complaint clusters
-- Size: Proportional to degree centrality
-
-**Organization Network:**
-- Nodes: Government organizations
-- Edges: Shared complaint handling
-- Communities: Collaborative groups
-
-## Contributing
-
-Part of the **2110403-DSDE-M150-Lover** project for Data Science and Data Engineering course, Chulalongkorn University.
-
-## License
-
-Educational project - Chulalongkorn University
-
-## Support
-
-For issues or questions, please contact the project team or refer to the main project README.
+**Last Updated:** December 2024
