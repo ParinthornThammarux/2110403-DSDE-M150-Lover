@@ -108,7 +108,7 @@ class MLModelIntegrator:
         ใช้วิเคราะห์รูปแบบการเกิดไฟดับ
         """
         if model_path is None:
-            model_path = PROJECT_ROOT / 'ml_models' / 'outage_model' / 'model' / 'outage_kmeans_model.pkl'
+            model_path = PROJECT_ROOT / 'ml_models' / 'outage_model' / 'models' / 'outage_kmeans_model.pkl'
         else:
             model_path = Path(model_path)
             if not model_path.is_absolute():
@@ -532,10 +532,10 @@ def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.Dat
             x=combined_predictions['date'],
             y=combined_predictions['predicted'],
             mode='lines+markers',
-            name='ค่าพยากรณ์ (โมเดล)',
+            name='Predicted (model)',
             line=dict(color='red', width=2.5),
             marker=dict(size=5, symbol='circle'),
-            hovertemplate='วันที่: %{x}<br>ค่าพยากรณ์: %{y:.0f}<extra></extra>'
+            hovertemplate='Date: %{x}<br>Predicted: %{y:.0f}<extra></extra>'
         ))
     else:
         # Only future predictions if no historical data
@@ -544,10 +544,10 @@ def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.Dat
             x=forecast_df['date'],
             y=forecast_df['predicted'],
             mode='lines+markers',
-            name='ค่าพยากรณ์ (โมเดล)',
+            name='Predicted (model)',
             line=dict(color='red', width=2.5),
             marker=dict(size=5, symbol='circle'),
-            hovertemplate='วันที่: %{x}<br>ค่าพยากรณ์: %{y:.0f}<extra></extra>'
+            hovertemplate='Date: %{x}<br>Predicted: %{y:.0f}<extra></extra>'
         ))
 
     # Add future confidence interval
@@ -555,7 +555,7 @@ def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.Dat
         x=forecast_df['date'],
         y=forecast_df['upper_bound'],
         mode='lines',
-        name='ช่วงความเชื่อมั่น',
+        name='Confidence Interval',
         line=dict(width=0),
         showlegend=False,
         hoverinfo='skip'
@@ -565,12 +565,12 @@ def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.Dat
         x=forecast_df['date'],
         y=forecast_df['lower_bound'],
         mode='lines',
-        name='ช่วงความเชื่อมั่น',
+        name='Confidence Interval',
         line=dict(width=0),
         fillcolor='rgba(255, 0, 0, 0.15)',
         fill='tonexty',
         showlegend=True,
-        hovertemplate='ขอบล่าง: %{y:.0f}<extra></extra>'
+        hovertemplate='Lower Bound: %{y:.0f}<extra></extra>'
     ))
 
     # Add vertical line to separate past and future
@@ -600,14 +600,14 @@ def plot_forecast_visualization(forecast_df: pd.DataFrame, historical_df: pd.Dat
         )
 
     # Add title with accuracy info if available
-    title_text = 'การพยากรณ์จำนวน Complaint (RandomForest Model)'
+    title_text = 'Forecasted Number of Complaints (RandomForest Model)'
     if mape is not None and rmse is not None:
-        title_text += f'<br><sub>ความแม่นยำ: MAPE={mape:.1f}%, RMSE={rmse:.0f}</sub>'
+        title_text += f'<br><sub>Accuracy: MAPE={mape:.1f}%, RMSE={rmse:.0f}</sub>'
 
     fig.update_layout(
         title=title_text,
-        xaxis_title='วันที่',
-        yaxis_title='จำนวน Complaint',
+        xaxis_title='Date',
+        yaxis_title='Number of Complaints',
         template='plotly_white',
         height=500,
         hovermode='x unified',

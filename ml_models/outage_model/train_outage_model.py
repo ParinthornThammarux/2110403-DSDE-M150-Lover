@@ -184,7 +184,7 @@ print(
 # ================================
 # 8) Save model & clustered data
 # ================================
-model_dir = PROJECT_ROOT / "ml_models" / "outage_model" / "model"
+model_dir = PROJECT_ROOT / "ml_models" / "outage_model" / "models"
 model_dir.mkdir(parents=True, exist_ok=True)
 
 joblib.dump(final_model, model_dir / "outage_kmeans_model.pkl")

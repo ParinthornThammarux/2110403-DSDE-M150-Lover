@@ -109,7 +109,7 @@ def load_data():
     คำอธิบาย: อ่านข้อมูลที่ผ่านการทำความสะอาดแล้ว
     ประมวลผลเพื่อใช้งานในระบบ รวมถึงแปลง one-hot encoding กลับเป็นค่าเดิม
     """
-    csv_path = Path("../data/clean_data.csv")
+    csv_path = Path("../data/clean_data_sampled.csv")
 
     if not csv_path.exists():
         st.error(f"ไม่พบไฟล์ข้อมูล: {csv_path}")
@@ -478,7 +478,7 @@ def main():
 
     # Tab 3: Forecasting
     with tab3:
-        st.header("การพยากรณ์ด้วย Machine Learning")
+        st.header("Predictive Modeling: Number of Complaints")
 
         st.markdown("""
         <div class="info-box">
@@ -490,40 +490,79 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        forecast_days = st.slider("จำนวนวันที่ต้องการพยากรณ์", 7, 60, 30)
+        forecast_days = st.slider("Number of days to predict", 7, 60, 30)
 
-        with st.spinner("กำลังสร้างการพยากรณ์..."):
-            forecast_df = ml_integrator.generate_forecast(df_filtered, days_ahead=forecast_days)
+        # Prepare session_state for storing forecast results
+        if "forecast_df" not in st.session_state:
+            st.session_state["forecast_df"] = None
+        if "forecast_days_used" not in st.session_state:
+            st.session_state["forecast_days_used"] = None
+    
+        # Click button to run forecast
+        run_forecast = st.button("Run forecast / Update prediction")
+        if run_forecast:
+            if df_filtered.empty:
+                st.warning("No data available for forecasting with the current filters.")
+            else:
+                with st.spinner("Loading forecast data..."):
+                    # Heavy computation: run ML model here only when button is pressed
+                    forecast_df = ml_integrator.generate_forecast(
+                        df_filtered,
+                        days_ahead=forecast_days
+                    )
+                    # Save results to session_state
+                    st.session_state["forecast_df"] = forecast_df
+                    st.session_state["forecast_days_used"] = forecast_days
+    
+        # 4) Show forecast if available in session_state
+        if st.session_state["forecast_df"] is not None:
+            forecast_df = st.session_state["forecast_df"]
 
-        st.plotly_chart(plot_forecast_visualization(forecast_df, df_filtered, ml_integrator=ml_integrator), use_container_width=True)
-
-        # Forecast statistics
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.metric(
-                "ค่าพยากรณ์เฉลี่ย",
-                f"{forecast_df['predicted'].mean():.0f} complaints/วัน"
+            st.caption(
+                f"Display last run (days_ahead = "
+                f"{st.session_state['forecast_days_used']} days)"
             )
 
-        with col2:
-            st.metric(
-                "ค่าพยากรณ์สูงสุด",
-                f"{forecast_df['predicted'].max():.0f} complaints"
+            # Plot forecast visualization
+            st.plotly_chart(
+                plot_forecast_visualization(
+                    forecast_df,
+                    df_filtered,
+                    ml_integrator=ml_integrator
+                ),
+                use_container_width=True
             )
 
-        with col3:
-            st.metric(
-                "ค่าพยากรณ์ต่ำสุด",
-                f"{forecast_df['predicted'].min():.0f} complaints"
-            )
+            # Forecast statistics
+            col1, col2, col3 = st.columns(3)
 
-        # Show forecast data
-        with st.expander("ดูข้อมูลการพยากรณ์แบบตาราง"):
-            forecast_display = forecast_df.copy()
-            forecast_display['date'] = forecast_display['date'].dt.strftime('%Y-%m-%d')
-            forecast_display.columns = ['วันที่', 'ค่าพยากรณ์', 'ขอบล่าง', 'ขอบบน']
-            st.dataframe(forecast_display, use_container_width=True, height=400)
+            with col1:
+                st.metric(
+                    "mean predicted",
+                    f"{forecast_df['predicted'].mean():.0f} complaints/day"
+                )
+
+            with col2:
+                st.metric(
+                    "max predicted",
+                    f"{forecast_df['predicted'].max():.0f} complaints/day"
+                )
+
+            with col3:
+                st.metric(
+                    "min predicted",
+                    f"{forecast_df['predicted'].min():.0f} complaints/day"
+                )
+
+            # Show forecast data
+            with st.expander("see forecast data table"):
+                forecast_display = forecast_df.copy()
+                forecast_display['date'] = forecast_display['date'].dt.strftime('%Y-%m-%d')
+                forecast_display.columns = ['วันที่', 'ค่าพยากรณ์', 'ขอบล่าง', 'ขอบบน']
+                st.dataframe(forecast_display, use_container_width=True, height=400)
+
+        else:
+            st.info("Please 'Run forecast / Update prediction'")
 
     # Tab 4: Anomaly Detection
     with tab4:
