@@ -29,13 +29,9 @@ from viz_modules import (
     plot_complaint_distribution_across_districts,
     plot_top_complaint_districts,
     plot_top_complaint_types,
-    plot_complaint_heatmap,
-    plot_complaint_types_pie,
-    plot_resolution_time_by_district,
     plot_time_series_comparison,
     plot_hourly_pattern,
     plot_weekday_pattern,
-    plot_state_distribution
 )
 
 from ml_integration import (
@@ -52,7 +48,10 @@ from outage_viz import (
     plot_cluster_by_district,
     plot_cluster_by_day,
     plot_cluster_weather_correlation,
-    render_cluster_summary
+    render_cluster_summary,
+    prepare_outage_dataframe,
+    plot_outage_duration_by_district,
+    plot_outage_timeline
 )
 
 # Page configuration
@@ -169,6 +168,24 @@ def load_data():
     return df
 
 
+@st.cache_data(ttl=3600)
+def load_mea_outage_data():
+    """
+    Loading MEA power outage data from clean_scraping_data.csv
+    """
+    csv_path = Path("../data/clean_scraping_data.csv")
+
+    if not csv_path.exists():
+        return None
+
+    # Load CSV
+    df = pd.read_csv(csv_path)
+
+    # Convert date to datetime
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+
+    return df
+
 @st.cache_resource
 def load_ml_models():
     """
@@ -284,7 +301,6 @@ def create_geospatial_map(df, map_type='heatmap'):
 
     return m
 
-
 def main():
     """Main dashboard application"""
 
@@ -298,6 +314,7 @@ def main():
     # Load data and models
     with st.spinner("กำลังโหลดข้อมูลและ ML models..."):
         df = load_data()
+        df_mea_outage = load_mea_outage_data()
         ml_integrator = load_ml_models()
 
     # Sidebar filters
@@ -379,9 +396,10 @@ def main():
     st.markdown("---")
 
     # Main tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "Geospatial Map",
         "District and Type Analysis",
+        "MEA power outage",
         "ML: Predictive Forecasting",
         "ML: Anomaly Detection",
         "ML: Power Outage Clustering",
@@ -400,8 +418,8 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
+        st.subheader("Truffy Complaint Map")
         # Map visualization type
-        st.subheader("Map Visualization Type")
         map_type = st.radio(
             "Choose map type",
             ['heatmap', 'clusters', 'GridLayer'],
@@ -558,8 +576,31 @@ def main():
         else:
                 st.plotly_chart(plot_complaint_timeseries(df_ts), use_container_width=True)
 
-    # Tab 3: Forecasting
+    # Tab 3: MEA power outage
     with tab3:
+        st.header("⚡ Outage Slots Visualization")
+
+        st.markdown("""
+        <div class="info-box">
+        <b>คำอธิบาย:</b> แท็บนี้แสดงข้อมูลช่วงเวลาไฟดับตามตัวอย่างข้อมูล 
+        โดยแสดงทั้งระยะเวลาไฟดับรวมในแต่ละเขต และไทม์ไลน์ของช่วงเวลาที่ไฟดับในแต่ละวัน
+        </div>
+        """, unsafe_allow_html=True)
+
+        df_outage = df_mea_outage
+
+        # Prepare dataframe (add start_dt, end_dt)
+        df_outage_prepared = prepare_outage_dataframe(df_outage)
+
+        # Bar chart: total duration by district
+        st.subheader("Total outage duration by district")
+        st.plotly_chart(
+            plot_outage_duration_by_district(df_outage_prepared),
+            use_container_width=True
+        )
+
+    # Tab 4: Forecasting
+    with tab4:
         st.header("Predictive Modeling: Number of Complaints")
 
         st.markdown("""
@@ -646,8 +687,8 @@ def main():
         else:
             st.info("Please 'Run forecast / Update prediction'")
 
-    # Tab 4: Anomaly Detection
-    with tab4:
+    # Tab 5: Anomaly Detection
+    with tab5:
         st.header("การตรวจจับความผิดปกติด้วย Machine Learning")
 
         st.markdown("""
@@ -770,8 +811,8 @@ def main():
         else:
             st.info("ไม่พบความผิดปกติในข้อมูลที่เลือก")
 
-    # Tab 5: Outage Clustering
-    with tab5:
+    # Tab 6: Outage Clustering
+    with tab6:
         st.header("K-Means Clustering: การจัดกลุ่มเหตุการณ์ไฟดับ")
 
         st.markdown("""
@@ -875,8 +916,8 @@ def main():
                                    'duration', 'temp', 'rain', 'wind_gust', 'cluster']
                     st.dataframe(cluster_sample[display_cols], use_container_width=True)
 
-    # Tab 6: Additional Analytics
-    with tab6:
+    # Tab 7: Additional Analytics
+    with tab7:
         st.header("การวิเคราะห์เพิ่มเติม")
 
         # Time patterns

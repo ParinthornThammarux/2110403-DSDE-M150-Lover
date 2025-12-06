@@ -10,7 +10,6 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import streamlit as st
 
-
 def plot_cluster_distribution(df: pd.DataFrame) -> go.Figure:
     """
     Plot distribution of outages across clusters
@@ -374,3 +373,59 @@ def render_cluster_summary(df: pd.DataFrame, cluster_id: int):
 
     if cluster_data['wind_gust'].mean() > 30:
         st.write(f"- คลัสเตอร์นี้มักเกิดในช่วงที่มีลมแรง (ลมเฉลี่ย {cluster_data['wind_gust'].mean():.1f} km/h)")
+
+def prepare_outage_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Prepare outage dataframe:
+    - Combine date + start/end into datetime
+    - Create 'start_dt' and 'end_dt' columns
+    """
+    df = df.copy()
+
+    # Ensure date is datetime
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+    # Combine date and start/end time to datetime
+    df["start_dt"] = pd.to_datetime(
+        df["date"].dt.strftime("%Y-%m-%d") + " " + df["start"].astype(str),
+        errors="coerce"
+    )
+    df["end_dt"] = pd.to_datetime(
+        df["date"].dt.strftime("%Y-%m-%d") + " " + df["end"].astype(str),
+        errors="coerce"
+    )
+
+    return df
+
+
+def plot_outage_duration_by_district(df: pd.DataFrame) -> go.Figure:
+    """
+    Bar chart: total outage duration (minutes) per district.
+    """
+    if df.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            title="No outage data available",
+            template="plotly_white"
+        )
+        return fig
+
+    df_group = (
+        df.groupby("district", as_index=False)["duration_minutes"]
+          .sum()
+          .sort_values("duration_minutes", ascending=False)
+    )
+
+    fig = px.bar(
+        df_group,
+        x="district",
+        y="duration_minutes",
+        title="Total outage duration by district",
+        labels={"district": "District", "duration_minutes": "Total duration (minutes)"}
+    )
+    fig.update_layout(
+        template="plotly_white",
+        xaxis_tickangle=-45,
+        height=450
+    )
+    return fig
