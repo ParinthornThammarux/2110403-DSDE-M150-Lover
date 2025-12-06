@@ -82,7 +82,7 @@ class MLModelIntegrator:
         ใช้หา complaint ที่มีพฤติกรรมผิดปกติ
         """
         if model_path is None:
-            model_path = PROJECT_ROOT / 'ml_models' / 'anomaly_detection' / 'anomaly_if_model.pkl'
+            model_path = PROJECT_ROOT / 'ml_models' / 'anomaly_detection' / 'models' / 'anomaly_if_model.pkl'
         else:
             model_path = Path(model_path)
             if not model_path.is_absolute():
@@ -108,7 +108,7 @@ class MLModelIntegrator:
         ใช้วิเคราะห์รูปแบบการเกิดไฟดับ
         """
         if model_path is None:
-            model_path = PROJECT_ROOT / 'ml_models' / 'outage_model' / 'models' / 'outage_kmeans_model.pkl'
+            model_path = PROJECT_ROOT / 'ml_models' / 'outage_model' / 'model' / 'outage_kmeans_model.pkl'
         else:
             model_path = Path(model_path)
             if not model_path.is_absolute():
