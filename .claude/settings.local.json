@@ -1,10 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(nul)",
-      "Bash(python -c:*)",
-      "Bash(python test_structure.py:*)",
-      "Bash(python -m py_compile:*)"
+      "Bash(python -c \"import google.generativeai as genai; import os; genai.configure(api_key=''AIzaSyCuuv-YBlW1whCyOh4pFUBxs34WezYgYpY''); models = genai.list_models(); print(''\\nAvailable Gemini Models:\\n''); [print(f''{m.name} - {m.display_name}'') for m in models if ''generateContent'' in m.supported_generation_methods]\")"
     ],
     "deny": [],
     "ask": []

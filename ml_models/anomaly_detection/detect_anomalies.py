@@ -1,6 +1,7 @@
 """
 Anomaly Detection System for Urban Complaints
 Model-focused version: fit Isolation Forest and save model file
+(เวอร์ชัน: assume CSV ถูก clean มาแล้ว)
 """
 
 import numpy as np
@@ -20,11 +21,25 @@ logger = logging.getLogger(__name__)
 class ComplaintAnomalyDetector:
     """Multi-method anomaly detection for complaint data"""
 
-    def __init__(self, contamination=0.05):
+    def __init__(self, contamination=0.05, max_samples=10000, n_estimators=300, max_features=1.0):
         self.contamination = contamination
         self.scaler = StandardScaler()
         self.iso_forest = None
-        self.anomaly_scores = None
+
+        # เก็บค่ากลางไว้ใช้ตอน predict
+        self.medians_ = None
+        # เก็บชื่อ feature ไว้สำหรับ ensure ลำดับ column ตอนใช้กับ data ใหม่
+        self.feature_names_ = None
+
+        # config ของ Isolation Forest
+        self.if_params = {
+            "n_estimators": n_estimators,
+            "max_samples": max_samples,
+            "max_features": max_features,
+            "contamination": contamination,
+            "random_state": 42,
+            "n_jobs": -1,
+        }
 
     # ------------------------------------------------------------------
     # FEATURE ENGINEERING
@@ -54,7 +69,7 @@ class ComplaintAnomalyDetector:
         if "solve_days" in df.columns:
             features["solve_days"] = df["solve_days"].fillna(0)
 
-        # Category encoding (one-hot for main types)
+        # Category encoding (simple one-hot-ish flags)
         if "type" in df.columns:
             features["is_flood"] = df["type"].str.contains("น้ำท่วม", na=False).astype(int)
             features["is_traffic"] = df["type"].str.contains("จราจร|ถนน", na=False).astype(int)
@@ -74,6 +89,10 @@ class ComplaintAnomalyDetector:
             df_with_count = df_tmp.merge(district_daily, on=["district", "date"], how="left")
             features["district_daily_count"] = df_with_count["daily_count"]
 
+        # Keep only numeric columns (กัน object/string หลุดเข้าไป)
+        numeric_cols = features.select_dtypes(include=[np.number]).columns
+        features = features[numeric_cols]
+
         logger.info(f"Prepared {len(features.columns)} features: {list(features.columns)}")
         return features
 
@@ -84,33 +103,53 @@ class ComplaintAnomalyDetector:
         """Fit Isolation Forest model (train)"""
         logger.info("Fitting Isolation Forest model...")
 
-        # Handle missing values
-        features_filled = features.fillna(features.median(numeric_only=True))
+        # Keep feature names (for later use with new data)
+        self.feature_names_ = list(features.columns)
+
+        # Handle missing values (fit medians from training data)
+        self.medians_ = features.median(numeric_only=True)
+        features_filled = features.fillna(self.medians_)
 
         # Scale features
         features_scaled = self.scaler.fit_transform(features_filled)
 
         # Train Isolation Forest
-        self.iso_forest = IsolationForest(
-            contamination=self.contamination,
-            n_estimators=200,
-            max_samples="auto",
-            random_state=42,
-            n_jobs=-1,
-        )
-
+        self.iso_forest = IsolationForest(**self.if_params)
         self.iso_forest.fit(features_scaled)
         logger.info("Isolation Forest training completed.")
+
+    def _align_features(self, features: pd.DataFrame) -> pd.DataFrame:
+        """
+        Align incoming features with the feature_names_ used during training.
+        """
+        if self.feature_names_ is None:
+            logger.warning("feature_names_ is None; using current features as-is.")
+            return features
+
+        # Add any missing columns with 0, and ensure order matches
+        for col in self.feature_names_:
+            if col not in features.columns:
+                features[col] = 0
+
+        features = features[self.feature_names_]
+        return features
 
     def predict_isolation_forest(self, features: pd.DataFrame):
         """Predict anomalies using already-fitted Isolation Forest"""
         if self.iso_forest is None:
             raise RuntimeError("Model is not fitted yet. Call fit_model() first.")
 
-        features_filled = features.fillna(features.median(numeric_only=True))
+        # Align feature columns with training schema
+        features = self._align_features(features)
+
+        # Use stored medians; fallback if somehow missing
+        if self.medians_ is None:
+            self.medians_ = features.median(numeric_only=True)
+
+        features_filled = features.fillna(self.medians_)
         features_scaled = self.scaler.transform(features_filled)
 
-        predictions = self.iso_forest.predict(features_scaled)        # -1 anomaly, 1 normal
+        predictions = self.iso_forest.predict(features_scaled)   # -1 anomaly, 1 normal
         anomaly_scores = self.iso_forest.score_samples(features_scaled)
 
         n_anomalies = (predictions == -1).sum()
@@ -130,6 +169,9 @@ class ComplaintAnomalyDetector:
             "scaler": self.scaler,
             "iso_forest": self.iso_forest,
             "contamination": self.contamination,
+            "medians_": self.medians_,
+            "feature_names_": self.feature_names_,
+            "if_params": self.if_params,
         }
         joblib.dump(obj, path)
         logger.info(f"Model saved to {path}")
@@ -140,10 +182,13 @@ class ComplaintAnomalyDetector:
         self.scaler = obj["scaler"]
         self.iso_forest = obj["iso_forest"]
         self.contamination = obj.get("contamination", self.contamination)
+        self.medians_ = obj.get("medians_", None)
+        self.feature_names_ = obj.get("feature_names_", None)
+        self.if_params = obj.get("if_params", self.if_params)
         logger.info(f"Model loaded from {path}")
 
     # ------------------------------------------------------------------
-    # OTHER DETECTION METHODS (ยังใช้ได้ ถ้าจะเอาไป combine)
+    # OTHER DETECTION METHODS (still usable to combine)
     # ------------------------------------------------------------------
     def detect_statistical(
         self,
@@ -295,34 +340,24 @@ def main():
     logger.info("=" * 80)
 
     # ------------------------------------------------------------------
-    # READ CSV HERE
+    # READ CSV (คลีนมาแล้ว ใช้ได้เลย)
     # ------------------------------------------------------------------
     csv_path = "clean_data.csv"
     logger.info(f"Loading CSV file: {csv_path}")
 
     df = pd.read_csv(csv_path)
-
     logger.info(f"Loaded dataset: {df.shape[0]} rows, {df.shape[1]} columns")
     logger.info(f"Columns: {list(df.columns)}")
 
     # ------------------------------------------------------------------
-    # BASIC CLEANING (recommended)
-    # ------------------------------------------------------------------
-    # ถ้า timestamp ไม่เป็น datetime → convert
-    if not np.issubdtype(df["timestamp"].dtype, np.datetime64):
-        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
-
-    # drop rows ที่ timestamp เป็น NaT
-    df = df.dropna(subset=["timestamp"])
-
-    # create complaint_count if not exist
-    if "complaint_count" not in df.columns:
-        df["complaint_count"] = 1
-
-    # ------------------------------------------------------------------
     # INITIALIZE MODEL
     # ------------------------------------------------------------------
-    detector = ComplaintAnomalyDetector(contamination=0.05)
+    detector = ComplaintAnomalyDetector(
+        contamination=0.05,
+        max_samples=30000,
+        n_estimators=400,
+        max_features=0.8,
+    )
 
     # ------------------------------------------------------------------
     # FEATURE ENGINEERING

@@ -1,0 +1,6 @@
+[2025-12-02 15:45:47,335] INFO - Scraping social media...
+[2025-12-02 15:45:47,336] INFO - Scraping Pantip forum...
+[2025-12-02 15:46:01,410] INFO - Found 30 topic links on Pantip
+[2025-12-02 15:46:04,289] INFO - Scraped 10 Pantip discussions
+[2025-12-02 15:46:04,338] INFO - [OK] Saved 10 records to data\external\scraped\social_pantip.csv
+[2025-12-02 15:46:04,406] INFO - Social media scraping complete!

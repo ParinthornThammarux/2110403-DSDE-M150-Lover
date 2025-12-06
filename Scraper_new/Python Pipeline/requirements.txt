@@ -1,0 +1,11 @@
+pandas
+instructor
+pydantic
+openmeteo-requests
+requests-cache
+retry-requests
+openai
+# Optional: For Thai-specific NER with WangchanBERTa
+# transformers
+# torch
+# pythainlp

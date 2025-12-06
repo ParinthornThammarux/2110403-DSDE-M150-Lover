@@ -1,0 +1,58 @@
+[2025-12-02 16:09:02,335] INFO - ================================================================================
+[2025-12-02 16:09:02,335] INFO - FAST PANTIP BANGKOK SCRAPER
+[2025-12-02 16:09:02,335] INFO - ================================================================================
+[2025-12-02 16:09:02,335] INFO - Target: 100,000 posts
+[2025-12-02 16:09:02,335] INFO - Batch size: 1,000 posts
+[2025-12-02 16:09:02,335] INFO - Workers: 5
+[2025-12-02 16:09:02,336] INFO - Output: pantip_bangkok_posts.csv
+[2025-12-02 16:09:02,336] INFO - ================================================================================
+[2025-12-02 16:09:02,336] INFO - Starting FAST Pantip scraper (max 100000 posts, 5 workers)...
+[2025-12-02 16:09:02,336] INFO - Data will be saved in batches of 1000 posts
+[2025-12-02 16:09:02,337] INFO - Phase 1: Collecting URLs...
+[2025-12-02 16:09:03,500] INFO - Collecting URLs from tag: กรุงเทพมหานคร
+[2025-12-02 16:09:44,040] INFO - Collecting URLs from tag: กรุงเทพ
+[2025-12-02 16:09:45,313] INFO - Collecting URLs from tag: ปัญหากทม
+[2025-12-02 16:09:46,626] INFO - Collecting URLs from tag: จราจรกรุงเทพ
+[2025-12-02 16:09:47,938] INFO - Collecting URLs from tag: น้ำท่วมกรุงเทพ
+[2025-12-02 16:09:49,212] INFO - Collecting URLs from tag: รถไฟฟ้ากรุงเทพ
+[2025-12-02 16:09:50,570] INFO - Collecting URLs from tag: ฝุ่นกรุงเทพ
+[2025-12-02 16:09:51,840] INFO - Collecting URLs from tag: ขยะกรุงเทพ
+[2025-12-02 16:09:53,128] INFO - Collecting URLs from tag: ถนนกรุงเทพ
+[2025-12-02 16:09:54,524] INFO - Collecting URLs from tag: สวนสาธารณะกรุงเทพ
+[2025-12-02 16:09:55,810] INFO - Collecting URLs from tag: โรงพยาบาลกรุงเทพ
+[2025-12-02 16:09:57,089] INFO - Collecting URLs from tag: ไฟฟ้าดับกรุงเทพ
+[2025-12-02 16:09:58,333] INFO - Collecting URLs from tag: น้ำประปากรุงเทพ
+[2025-12-02 16:09:59,609] INFO - Collecting URLs from room: chalermkrung
+[2025-12-02 16:10:19,659] INFO - Collecting URLs from room: hometown
+[2025-12-02 16:10:20,905] INFO - Collecting URLs from room: politics
+[2025-12-02 16:10:22,167] INFO - Collecting URLs from room: travel
+[2025-12-02 16:10:25,676] INFO - Collected 57 unique URLs
+[2025-12-02 16:10:25,677] INFO - Phase 2: Scraping details with 5 parallel workers...
+[2025-12-02 16:10:25,677] INFO - Worker 0: Starting with 12 URLs
+[2025-12-02 16:10:25,678] INFO - Worker 1: Starting with 12 URLs
+[2025-12-02 16:10:25,678] INFO - Worker 2: Starting with 12 URLs
+[2025-12-02 16:10:25,678] INFO - Worker 3: Starting with 12 URLs
+[2025-12-02 16:10:25,679] INFO - Worker 4: Starting with 9 URLs
+[2025-12-02 16:11:07,123] INFO - Worker 4: Completed with 9 posts
+[2025-12-02 16:11:13,250] INFO - Worker 2: Completed with 12 posts
+[2025-12-02 16:11:14,219] INFO - Worker 1: Completed with 12 posts
+[2025-12-02 16:11:14,341] INFO - Worker 0: Completed with 12 posts
+[2025-12-02 16:11:16,761] INFO - Worker 3: Completed with 12 posts
+[2025-12-02 16:11:16,762] INFO - Scraped 57 total posts
+[2025-12-02 16:11:16,790] INFO - [OK] Final save: 57 posts to data\external\scraped\pantip_bangkok_posts.csv
+[2025-12-02 16:11:16,790] INFO - 
+================================================================================
+[2025-12-02 16:11:16,790] INFO - SCRAPING SUMMARY
+[2025-12-02 16:11:16,791] INFO - ================================================================================
+[2025-12-02 16:11:16,791] INFO - Total posts scraped: 57
+[2025-12-02 16:11:16,791] INFO - Unique posts saved: 57
+[2025-12-02 16:11:16,798] INFO - Tags covered: 1
+[2025-12-02 16:11:16,800] INFO - Date range: 2025-12-02 16:10:28.487900 to 2025-12-02 16:11:13.975936
+[2025-12-02 16:11:16,800] INFO - Output file: data\external\scraped\pantip_bangkok_posts.csv
+[2025-12-02 16:11:16,801] INFO - ================================================================================
+[2025-12-02 16:11:16,801] INFO - 
+Scraping completed in 134.47 seconds (2.24 minutes)
+[2025-12-02 16:11:16,801] INFO - Average: 0.42 posts/second
+[2025-12-02 16:11:16,801] INFO - Speed improvement: ~1.3x faster than sequential
+[2025-12-02 16:11:16,802] INFO - 
+Done!
