@@ -3,7 +3,7 @@ Main Streamlit Dashboard - Urban Issue Forecasting System
 Bangkok Traffy Complaint Analysis & Prediction
 
 ระบบวิเคราะห์และพยากรณ์ปัญหาในเขตกรุงเทพมหานคร
-รวม ML models: RandomForest Forecaster และ Isolation Forest Anomaly Detector
+รวม ML models: RandomForest Forecaster, Isolation Forest Anomaly Detector, และ K-Means Outage Clustering
 
 Run: streamlit run visualization/dashboard/main_dashboard.py
 """
@@ -42,10 +42,20 @@ from ml_integration import (
     plot_anomaly_distribution
 )
 
+from outage_viz import (
+    plot_cluster_distribution,
+    plot_cluster_by_time,
+    plot_cluster_characteristics,
+    plot_cluster_by_district,
+    plot_cluster_by_day,
+    plot_cluster_weather_correlation,
+    render_cluster_summary
+)
+
 # Page configuration
 st.set_page_config(
     page_title="Urban Issue Dashboard - Bangkok",
-    page_icon="🏙️",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -102,14 +112,14 @@ def load_data():
     csv_path = 'clean_data.csv'
 
     if not Path(csv_path).exists():
-        st.error(f"❌ ไม่พบไฟล์ข้อมูล: {csv_path}")
+        st.error(f"ไม่พบไฟล์ข้อมูล: {csv_path}")
         st.info("กรุณาวาง clean_data.csv ไว้ใน root directory")
         st.stop()
 
     # Load CSV
     df = pd.read_csv(csv_path)
 
-    st.sidebar.info(f"📊 โหลดข้อมูล: {len(df):,} แถว")
+    st.sidebar.info(f"โหลดข้อมูล: {len(df):,} แถว")
 
     # Parse type field
     def parse_types(type_str):
@@ -175,19 +185,27 @@ def load_ml_models():
     # Load anomaly detection model
     anomaly_loaded = integrator.load_anomaly_model()
 
+    # Load outage clustering model
+    outage_loaded = integrator.load_outage_model()
+
     status_msg = []
     if rf_loaded:
-        status_msg.append("✅ RandomForest Forecaster (New Model)")
+        status_msg.append("[OK] RandomForest Forecaster (New Model)")
     else:
-        status_msg.append("❌ RandomForest Forecaster - MODEL REQUIRED")
-        st.sidebar.error("⚠️ Forecasting model not found! Please train the model first.")
+        status_msg.append("[ERROR] RandomForest Forecaster - MODEL REQUIRED")
+        st.sidebar.error("WARNING: Forecasting model not found! Please train the model first.")
 
     if anomaly_loaded:
-        status_msg.append("✅ Isolation Forest Anomaly Detector")
+        status_msg.append("[OK] Isolation Forest Anomaly Detector")
     else:
-        status_msg.append("⚠️ Anomaly Detector (ใช้วิธีทางสถิติ)")
+        status_msg.append("[WARNING] Anomaly Detector (ใช้วิธีทางสถิติ)")
 
-    st.sidebar.info("🤖 สถานะ ML Models:\n" + "\n".join(status_msg))
+    if outage_loaded:
+        status_msg.append("[OK] K-Means Outage Clustering")
+    else:
+        status_msg.append("[WARNING] Outage Clustering (โมเดลไม่พร้อมใช้งาน)")
+
+    st.sidebar.info("สถานะ ML Models:\n" + "\n".join(status_msg))
 
     return integrator
 
@@ -235,7 +253,7 @@ def main():
     """Main dashboard application"""
 
     # Header
-    st.markdown('<div class="main-header">🏙️ Urban Issue Forecasting Dashboard</div>',
+    st.markdown('<div class="main-header">Urban Issue Forecasting Dashboard</div>',
                unsafe_allow_html=True)
     st.markdown('<div class="sub-header">ระบบวิเคราะห์และพยากรณ์ปัญหาเขตกรุงเทพมหานคร | Bangkok Traffy Data Analysis</div>',
                unsafe_allow_html=True)
@@ -247,7 +265,7 @@ def main():
         ml_integrator = load_ml_models()
 
     # Sidebar filters
-    st.sidebar.header("🎛️ ตัวกรอง (Filters)")
+    st.sidebar.header("ตัวกรอง (Filters)")
 
     # Date range filter
     min_date = df['timestamp'].min().date()
@@ -290,7 +308,7 @@ def main():
         df_filtered = df_filtered[df_filtered['primary_type'] == selected_type]
 
     # Key Metrics
-    st.header("📊 ตัวชี้วัดหลัก (Key Metrics)")
+    st.header("ตัวชี้วัดหลัก (Key Metrics)")
 
     col1, col2, col3, col4, col5 = st.columns(5)
 
@@ -332,17 +350,18 @@ def main():
     st.markdown("---")
 
     # Main tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🗺️ แผนที่ภูมิศาสตร์",
-        "📊 วิเคราะห์เขตและประเภท",
-        "🤖 ML: การพยากรณ์",
-        "⚠️ ML: การตรวจจับความผิดปกติ",
-        "📈 การวิเคราะห์เพิ่มเติม"
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "แผนที่ภูมิศาสตร์",
+        "วิเคราะห์เขตและประเภท",
+        "ML: การพยากรณ์",
+        "ML: การตรวจจับความผิดปกติ",
+        "ML: การจัดกลุ่มไฟดับ",
+        "การวิเคราะห์เพิ่มเติม"
     ])
 
     # Tab 1: Geospatial Analysis
     with tab1:
-        st.header("🗺️ การวิเคราะห์เชิงพื้นที่")
+        st.header("การวิเคราะห์เชิงพื้นที่")
 
         st.markdown("""
         <div class="info-box">
@@ -357,7 +376,7 @@ def main():
             folium_static(m, width=1400, height=600)
 
         # District statistics table
-        st.subheader("📋 สถิติแต่ละเขต")
+        st.subheader("สถิติแต่ละเขต")
         district_stats = df_filtered.groupby('district').agg({
             'lat': 'count',
             'solve_days': 'mean',
@@ -369,10 +388,10 @@ def main():
 
     # Tab 2: District and Type Analysis
     with tab2:
-        st.header("📊 วิเคราะห์เขตและประเภท Complaint")
+        st.header("วิเคราะห์เขตและประเภท Complaint")
 
         # Top districts
-        st.subheader("🏆 เขตที่มี Complaint มากที่สุด")
+        st.subheader("เขตที่มี Complaint มากที่สุด")
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> จัดอันดับเขตที่มีจำนวน complaint สูงสุด ช่วยระบุพื้นที่ที่ต้องให้ความสนใจเป็นพิเศษ
@@ -385,7 +404,7 @@ def main():
         st.markdown("---")
 
         # Complaints by district
-        st.subheader("📍 แต่ละเขตมี Complaint อะไรบ้าง จำนวนเท่าไหร่")
+        st.subheader("แต่ละเขตมี Complaint อะไรบ้าง จำนวนเท่าไหร่")
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> แสดงการกระจายของ complaint แต่ละประเภทในแต่ละเขต
@@ -406,7 +425,7 @@ def main():
         st.markdown("---")
 
         # Complaint distribution across districts
-        st.subheader("🗂️ แต่ละ Complaint มีในเขตไหนบ้าง เขตละเท่าไหร่")
+        st.subheader("แต่ละ Complaint มีในเขตไหนบ้าง เขตละเท่าไหร่")
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> แสดงว่า complaint แต่ละประเภทเกิดขึ้นในเขตใดบ้าง
@@ -430,15 +449,15 @@ def main():
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("🥧 สัดส่วนประเภท Complaint")
+            st.subheader("สัดส่วนประเภท Complaint")
             st.plotly_chart(plot_complaint_types_pie(df_filtered), use_container_width=True)
 
         with col2:
-            st.subheader("📊 สถานะการดำเนินการ")
+            st.subheader("สถานะการดำเนินการ")
             st.plotly_chart(plot_state_distribution(df_filtered), use_container_width=True)
 
         # Heatmap
-        st.subheader("🔥 Heatmap: ความเข้มของ Complaint ตามเวลา")
+        st.subheader("Heatmap: ความเข้มของ Complaint ตามเวลา")
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> แสดงแนวโน้มของ complaint ในแต่ละเขตตามช่วงเวลา
@@ -448,7 +467,7 @@ def main():
         st.plotly_chart(plot_complaint_heatmap(df_filtered), use_container_width=True)
 
         # Resolution time
-        st.subheader("⏱️ ระยะเวลาในการแก้ปัญหาแต่ละเขต")
+        st.subheader("ระยะเวลาในการแก้ปัญหาแต่ละเขต")
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> แสดงการกระจายของเวลาที่ใช้ในการแก้ปัญหาในแต่ละเขต
@@ -459,7 +478,7 @@ def main():
 
     # Tab 3: Forecasting
     with tab3:
-        st.header("🤖 การพยากรณ์ด้วย Machine Learning")
+        st.header("การพยากรณ์ด้วย Machine Learning")
 
         st.markdown("""
         <div class="info-box">
@@ -500,7 +519,7 @@ def main():
             )
 
         # Show forecast data
-        with st.expander("📋 ดูข้อมูลการพยากรณ์แบบตาราง"):
+        with st.expander("ดูข้อมูลการพยากรณ์แบบตาราง"):
             forecast_display = forecast_df.copy()
             forecast_display['date'] = forecast_display['date'].dt.strftime('%Y-%m-%d')
             forecast_display.columns = ['วันที่', 'ค่าพยากรณ์', 'ขอบล่าง', 'ขอบบน']
@@ -508,19 +527,19 @@ def main():
 
     # Tab 4: Anomaly Detection
     with tab4:
-        st.header("⚠️ การตรวจจับความผิดปกติด้วย Machine Learning")
+        st.header("การตรวจจับความผิดปกติด้วย Machine Learning")
 
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> ใช้โมเดล Isolation Forest ในการตรวจจับ complaint ที่มีพฤติกรรมผิดปกติ<br>
-        <b>🤖 ข้อมูลที่ใช้:</b> ข้อมูลจริงจาก clean_data.csv<br>
-        <b>🔍 โมเดล:</b> ml_models/anomaly_detection/anomaly_if_model.pkl<br>
+        <b>ข้อมูลที่ใช้:</b> ข้อมูลจริงจาก clean_data.csv<br>
+        <b>โมเดล:</b> ml_models/anomaly_detection/anomaly_if_model.pkl<br>
         Anomaly Score สูง = ผิดปกติมาก (เช่น ใช้เวลาแก้ไขนานผิดปกติ หรือเกิดในพื้นที่/เวลาที่ผิดปกติ)
         </div>
         """, unsafe_allow_html=True)
 
         # Settings for data sampling
-        st.markdown("##### ⚙️ การตั้งค่าการวิเคราะห์")
+        st.markdown("##### การตั้งค่าการวิเคราะห์")
 
         col_setting1, col_setting2 = st.columns([2, 3])
 
@@ -547,7 +566,7 @@ def main():
                 sample_percentage = 100
 
         with col_setting2:
-            st.info(f"📊 ใช้ข้อมูลจริง {len(df_for_anomaly):,} รายการ จาก clean_data.csv")
+            st.info(f"ใช้ข้อมูลจริง {len(df_for_anomaly):,} รายการ จาก clean_data.csv")
 
         # Detect anomalies
         st.markdown("---")
@@ -606,18 +625,18 @@ def main():
                 )
 
         # Data source info
-        st.info(f"ℹ️ **แหล่งข้อมูล:** ข้อมูลจริงจาก clean_data.csv ({len(df_with_anomalies):,} รายการ)")
+        st.info(f"**แหล่งข้อมูล:** ข้อมูลจริงจาก clean_data.csv ({len(df_with_anomalies):,} รายการ)")
 
         # Anomaly scatter plot
-        st.subheader("📈 Anomaly Detection Timeline")
+        st.subheader("Anomaly Detection Timeline")
         st.plotly_chart(plot_anomaly_scatter(df_with_anomalies), use_container_width=True)
 
         # Anomaly distribution
-        st.subheader("📊 การกระจายของ Anomalies")
+        st.subheader("การกระจายของ Anomalies")
         st.plotly_chart(plot_anomaly_distribution(df_with_anomalies), use_container_width=True)
 
         # Anomaly table
-        st.subheader("📋 รายการ Anomalies ที่ตรวจพบ (Top 50)")
+        st.subheader("รายการ Anomalies ที่ตรวจพบ (Top 50)")
         anomalies = df_with_anomalies[df_with_anomalies['is_anomaly'] == 1].copy()
 
         if len(anomalies) > 0:
@@ -630,12 +649,118 @@ def main():
         else:
             st.info("ไม่พบความผิดปกติในข้อมูลที่เลือก")
 
-    # Tab 5: Additional Analytics
+    # Tab 5: Outage Clustering
     with tab5:
-        st.header("📈 การวิเคราะห์เพิ่มเติม")
+        st.header("การจัดกลุ่มพฤติกรรมไฟดับด้วย K-Means Clustering")
+
+        st.markdown("""
+        <div class="info-box">
+        <b>คำอธิบาย:</b> ใช้โมเดล K-Means ในการจัดกลุ่มเหตุการณ์ไฟดับตามพฤติกรรมที่คล้ายกัน<br>
+        <b>ข้อมูลที่ใช้:</b> ข้อมูลการไฟดับจาก clean_scraping_data.csv<br>
+        <b>โมเดล:</b> ml_models/outage_model/models/outage_kmeans_model.pkl<br>
+        <b>Features:</b> วันในสัปดาห์, เขต, อุณหภูมิ, ปริมาณฝน, ความเร็วลม, เวลาเริ่ม, ระยะเวลา
+        </div>
+        """, unsafe_allow_html=True)
+
+        if ml_integrator.outage_model is None:
+            st.warning("WARNING: โมเดล K-Means Clustering ไม่พร้อมใช้งาน")
+            st.info("กรุณา train โมเดลโดยรันไฟล์: `ml_models/outage_model/train_outage_model.py`")
+        else:
+            # Load outage data with clusters
+            outage_data_path = 'ml_models/outage_model/models/power_outage_with_clusters.csv'
+
+            if not Path(outage_data_path).exists():
+                st.error(f"ไม่พบไฟล์ข้อมูลคลัสเตอร์: {outage_data_path}")
+                st.info("กรุณา train โมเดลก่อนเพื่อสร้างไฟล์ข้อมูลคลัสเตอร์")
+            else:
+                with st.spinner("กำลังโหลดข้อมูลคลัสเตอร์..."):
+                    df_outage = pd.read_csv(outage_data_path)
+
+                st.success(f"โหลดข้อมูลเรียบร้อย: {len(df_outage):,} เหตุการณ์ไฟดับ")
+
+                # Show key metrics
+                st.markdown("### สถิติรวม")
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric("จำนวนคลัสเตอร์", f"{df_outage['cluster'].nunique()}")
+
+                with col2:
+                    avg_duration = df_outage['duration'].mean()
+                    st.metric("ระยะเวลาเฉลี่ย", f"{avg_duration:.0f} นาที")
+
+                with col3:
+                    total_outages = len(df_outage)
+                    st.metric("เหตุการณ์ทั้งหมด", f"{total_outages:,}")
+
+                with col4:
+                    unique_districts = df_outage['district'].nunique()
+                    st.metric("จำนวนเขต", f"{unique_districts}")
+
+                st.markdown("---")
+
+                # Cluster distribution
+                st.subheader("การกระจายของเหตุการณ์ในแต่ละคลัสเตอร์")
+                st.plotly_chart(plot_cluster_distribution(df_outage), use_container_width=True)
+
+                st.markdown("---")
+
+                # Cluster characteristics
+                st.subheader("ลักษณะเฉลี่ยของแต่ละคลัสเตอร์")
+                st.plotly_chart(plot_cluster_characteristics(df_outage), use_container_width=True)
+
+                st.markdown("---")
+
+                # Time patterns
+                st.subheader("รูปแบบเวลาของไฟดับ")
+                st.plotly_chart(plot_cluster_by_time(df_outage), use_container_width=True)
+
+                st.markdown("---")
+
+                # Geographic and temporal patterns
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.subheader("การกระจายตามเขต")
+                    st.plotly_chart(plot_cluster_by_district(df_outage), use_container_width=True)
+
+                with col2:
+                    st.subheader("การกระจายตามวัน")
+                    st.plotly_chart(plot_cluster_by_day(df_outage), use_container_width=True)
+
+                st.markdown("---")
+
+                # Weather correlation
+                st.subheader("ความสัมพันธ์กับสภาพอากาศ")
+                st.plotly_chart(plot_cluster_weather_correlation(df_outage), use_container_width=True)
+
+                st.markdown("---")
+
+                # Cluster details
+                st.subheader("รายละเอียดแต่ละคลัสเตอร์")
+
+                clusters = sorted(df_outage['cluster'].unique())
+                selected_cluster = st.selectbox(
+                    "เลือกคลัสเตอร์ที่ต้องการดูรายละเอียด",
+                    clusters,
+                    format_func=lambda x: f"Cluster {x}"
+                )
+
+                render_cluster_summary(df_outage, selected_cluster)
+
+                # Show sample data
+                with st.expander("ดูข้อมูลตัวอย่างของคลัสเตอร์ที่เลือก"):
+                    cluster_sample = df_outage[df_outage['cluster'] == selected_cluster].head(20)
+                    display_cols = ['date', 'day_of_week', 'district', 'start', 'end',
+                                   'duration', 'temp', 'rain', 'wind_gust', 'cluster']
+                    st.dataframe(cluster_sample[display_cols], use_container_width=True)
+
+    # Tab 6: Additional Analytics
+    with tab6:
+        st.header("การวิเคราะห์เพิ่มเติม")
 
         # Time patterns
-        st.subheader("⏰ รูปแบบตามเวลา")
+        st.subheader("รูปแบบตามเวลา")
 
         col1, col2 = st.columns(2)
 
@@ -648,7 +773,7 @@ def main():
             st.plotly_chart(plot_weekday_pattern(df_filtered), use_container_width=True)
 
         # Time series comparison
-        st.subheader("📉 เปรียบเทียบแนวโน้มแต่ละเขต")
+        st.subheader("เปรียบเทียบแนวโน้มแต่ละเขต")
         st.markdown("""
         <div class="info-box">
         <b>คำอธิบาย:</b> เปรียบเทียบแนวโน้มจำนวน complaint ของหลายเขตตามเวลา
@@ -666,7 +791,7 @@ def main():
             st.plotly_chart(plot_time_series_comparison(df_filtered, selected_districts), use_container_width=True)
 
         # Summary statistics
-        st.subheader("📊 สถิติสรุป")
+        st.subheader("สถิติสรุป")
 
         col1, col2, col3 = st.columns(3)
 
@@ -693,10 +818,10 @@ def main():
     st.markdown("---")
     st.markdown(f"""
         <div style='text-align: center; color: #666; padding: 2rem;'>
-            <p style='font-size: 1.2rem; font-weight: bold;'>🏙️ Urban Issue Forecasting System</p>
+            <p style='font-size: 1.2rem; font-weight: bold;'>Urban Issue Forecasting System</p>
             <p>DSDE M150-Lover Team | Chulalongkorn University</p>
             <p>Data Source: Bangkok Traffy Fondue | Data Rows: {len(df):,}</p>
-            <p>ML Models: RandomForest Forecaster + Isolation Forest Anomaly Detector</p>
+            <p>ML Models: RandomForest Forecaster + Isolation Forest Anomaly Detector + K-Means Outage Clustering</p>
             <p>Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
         </div>
     """, unsafe_allow_html=True)

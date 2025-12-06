@@ -24,6 +24,7 @@ class MLModelIntegrator:
         self.rf_model = None
         self.anomaly_model = None
         self.anomaly_detector = None
+        self.outage_model = None
 
     def load_forecasting_model(self, model_path: str = 'forecasting/outputs/rf_model.pkl'):
         """
@@ -63,6 +64,25 @@ class MLModelIntegrator:
                 return False
         except Exception as e:
             logger.error(f"Error loading anomaly model: {e}")
+            return False
+
+    def load_outage_model(self, model_path: str = 'ml_models/outage_model/models/outage_kmeans_model.pkl'):
+        """
+        Load K-Means outage clustering model
+
+        คำอธิบาย: โหลดโมเดลจัดกลุ่มพฤติกรรมไฟดับที่ train ไว้แล้ว
+        ใช้วิเคราะห์รูปแบบการเกิดไฟดับ
+        """
+        try:
+            if Path(model_path).exists():
+                self.outage_model = joblib.load(model_path)
+                logger.info(f"Loaded outage clustering model from {model_path}")
+                return True
+            else:
+                logger.warning(f"Outage model not found at {model_path}")
+                return False
+        except Exception as e:
+            logger.error(f"Error loading outage model: {e}")
             return False
 
     def generate_forecast(self, df: pd.DataFrame, days_ahead: int = 30) -> pd.DataFrame:
