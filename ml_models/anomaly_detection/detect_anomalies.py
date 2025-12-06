@@ -9,6 +9,7 @@ import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import DBSCAN
+from sklearn.metrics import silhouette_score
 from scipy import stats
 import logging
 from pathlib import Path
@@ -160,6 +161,9 @@ class ComplaintAnomalyDetector:
 
         return predictions, anomaly_scores
 
+    # ------------------------------------------------------------------
+    # MODEL PERSISTENCE
+    # ------------------------------------------------------------------
     def save_model(self, path: str = "anomaly_if_model.pkl"):
         """Save Isolation Forest model + scaler to file"""
         if self.iso_forest is None:
@@ -330,13 +334,77 @@ class ComplaintAnomalyDetector:
 
         return final_anomalies, combined_score
 
+    # ------------------------------------------------------------------
+    # NEW: EVALUATION METHODS (UNSUPERVISED)
+    # ------------------------------------------------------------------
+    def evaluate_score_separation(self, predictions: np.ndarray, scores: np.ndarray) -> float:
+        """
+        วิธีที่ 1: วัดการแยกตัวของ anomaly score ระหว่างกลุ่มปกติ (-1/1) โดยใช้ Silhouette score
+        - ใช้ label จาก Isolation Forest (-1 anomaly, 1 normal)
+        - ยิ่งค่าใกล้ 1 แปลว่า distribution ของ score แยกกลุ่มดี
+        """
+        # แปลงเป็นกลุ่ม 0/1 (0 = normal, 1 = anomaly)
+        labels = (predictions == -1).astype(int)
+
+        # ถ้ามีกลุ่มเดียวหรือกลุ่มเล็กเกินไป silhouette จะคำนวณไม่ได้
+        unique, counts = np.unique(labels, return_counts=True)
+        if len(unique) < 2 or np.any(counts < 2):
+            logger.warning("Not enough samples in one of the groups for silhouette_score.")
+            return 0.0
+
+        # IsolationForest: scores ปกติจะสูงกว่า anomaly -> แต่ silhouette ไม่แคร์ scale
+        values = scores.reshape(-1, 1)
+
+        try:
+            s = silhouette_score(values, labels)
+            logger.info(f"Silhouette score (score separation) = {s:.4f}")
+            return float(s)
+        except Exception as e:
+            logger.warning(f"Silhouette score failed with error: {e}")
+            return 0.0
+
+    def evaluate_stability(self, features: pd.DataFrame, n_iter: int = 5, noise_std: float = 0.01) -> float:
+        """
+        วิธีที่ 2: วัดความเสถียรของโมเดลต่อ noise เล็กน้อยใน feature
+        - ใช้โมเดลตัวเดิม (ไม่ retrain)
+        - เพิ่ม noise ~ N(0, noise_std) ให้ features แล้วดู prediction เปลี่ยนไปมากน้อยแค่ไหน
+        - ค่าใกล้ 1 = stable สูง, ค่าใกล้ 0 = prediction ไวต่อการเปลี่ยนแปลงเล็กน้อย
+        """
+        if self.iso_forest is None:
+            raise RuntimeError("Model is not fitted yet. Call fit_model() first.")
+
+        # base prediction (ไม่มี noise)
+        base_preds, _ = self.predict_isolation_forest(features)
+        base_binary = (base_preds == -1).astype(int)
+
+        stability_scores = []
+
+        for i in range(n_iter):
+            # เพิ่ม noise ให้กับ features เฉพาะ column numeric
+            noise = np.random.normal(loc=0.0, scale=noise_std, size=features.shape)
+            noisy_values = features.values + noise
+            noisy_df = pd.DataFrame(noisy_values, columns=features.columns, index=features.index)
+
+            preds_i, _ = self.predict_isolation_forest(noisy_df)
+            preds_binary = (preds_i == -1).astype(int)
+
+            # วัดสัดส่วนที่ prediction ตรงกับ base
+            same_ratio = np.mean(preds_binary == base_binary)
+            stability_scores.append(same_ratio)
+
+        stability_mean = float(np.mean(stability_scores)) if stability_scores else 0.0
+        logger.info(f"Stability score (mean agreement over {n_iter} runs) = {stability_mean:.4f}")
+        return stability_mean
+
 
 # ----------------------------------------------------------------------
 # MAIN: train Isolation Forest model using actual CSV file
+# + แยก train/validation ตามเวลา (time-based split 80/20)
+# + เพิ่ม evaluation วิธีที่ 1 และ 2 บน validation set
 # ----------------------------------------------------------------------
 def main():
     logger.info("=" * 80)
-    logger.info("Train Anomaly Detection Model (Isolation Forest)")
+    logger.info("Train Anomaly Detection Model (Isolation Forest) with time-based train/validation split")
     logger.info("=" * 80)
 
     # ------------------------------------------------------------------
@@ -350,6 +418,25 @@ def main():
     logger.info(f"Columns: {list(df.columns)}")
 
     # ------------------------------------------------------------------
+    # TIME-BASED SPLIT (เช็คว่า timestamp เรียงตามเวลา)
+    # ------------------------------------------------------------------
+    if "timestamp" not in df.columns:
+        raise ValueError("Input CSV must contain 'timestamp' column for time-based split.")
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df = df.sort_values("timestamp")
+
+    split_ratio = 0.8  # 80% train, 20% validation
+    split_idx = int(len(df) * split_ratio)
+
+    df_train = df.iloc[:split_idx].copy()
+    df_val = df.iloc[split_idx:].copy()
+
+    logger.info(f"Time-based split with ratio {split_ratio}")
+    logger.info(f"Train set: {df_train.shape[0]} rows")
+    logger.info(f"Validation set: {df_val.shape[0]} rows")
+
+    # ------------------------------------------------------------------
     # INITIALIZE MODEL
     # ------------------------------------------------------------------
     detector = ComplaintAnomalyDetector(
@@ -360,17 +447,40 @@ def main():
     )
 
     # ------------------------------------------------------------------
-    # FEATURE ENGINEERING
+    # FEATURE ENGINEERING (ใช้ train/val แยกกัน)
     # ------------------------------------------------------------------
-    features = detector.prepare_features(df)
+    features_train = detector.prepare_features(df_train)
+    features_val = detector.prepare_features(df_val)
 
     # ------------------------------------------------------------------
-    # TRAIN MODEL
+    # TRAIN MODEL (ใช้เฉพาะ train)
     # ------------------------------------------------------------------
-    detector.fit_model(features)
+    detector.fit_model(features_train)
 
     # ------------------------------------------------------------------
-    # SAVE MODEL
+    # VALIDATION (ดู distribution ของ anomaly บน val)
+    # ------------------------------------------------------------------
+    val_preds, val_scores = detector.predict_isolation_forest(features_val)
+    val_anomaly_ratio = (val_preds == -1).mean()
+
+    logger.info(
+        f"Validation set anomaly ratio: {val_anomaly_ratio * 100:.2f}% "
+        f"({(val_preds == -1).sum()} / {len(val_preds)} records)"
+    )
+
+    # ------------------------------------------------------------------
+    # EVALUATION METHODS (บน validation set)
+    # ------------------------------------------------------------------
+    # วิธีที่ 1: วัดการแยกตัวของ score ระหว่าง anomaly vs normal
+    score_sep = detector.evaluate_score_separation(val_preds, val_scores)
+    logger.info(f"[Evaluation-1] Score separation (silhouette) on validation = {score_sep:.4f}")
+
+    # วิธีที่ 2: วัดความเสถียรของ prediction ต่อ noise เล็กน้อย
+    stability = detector.evaluate_stability(features_val, n_iter=5, noise_std=0.01)
+    logger.info(f"[Evaluation-2] Stability on validation = {stability:.4f}")
+
+    # ------------------------------------------------------------------
+    # SAVE MODEL (เทรนจาก train แล้ว)
     # ------------------------------------------------------------------
     Path("ml_models/anomaly_detection").mkdir(parents=True, exist_ok=True)
     model_path = "ml_models/anomaly_detection/anomaly_if_model.pkl"
