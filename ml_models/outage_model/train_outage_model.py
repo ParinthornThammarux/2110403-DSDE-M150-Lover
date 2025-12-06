@@ -16,7 +16,7 @@ import joblib
 # ================================
 # 1) Load data
 # ================================
-df = pd.read_csv("clean_data/clean_scraping_data.csv")
+df = pd.read_csv("../data/clean_scraping_data.csv")
 
 # ตรวจดูว่าคอลัมน์หลัก ๆ มีอยู่ไหม
 required_cols = [

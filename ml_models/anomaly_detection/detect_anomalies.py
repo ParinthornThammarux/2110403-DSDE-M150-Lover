@@ -410,7 +410,7 @@ def main():
     # ------------------------------------------------------------------
     # READ CSV (คลีนมาแล้ว ใช้ได้เลย)
     # ------------------------------------------------------------------
-    csv_path = "clean_data.csv"
+    csv_path = "../data/clean_data.csv"
     logger.info(f"Loading CSV file: {csv_path}")
 
     df = pd.read_csv(csv_path)

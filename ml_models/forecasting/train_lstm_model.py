@@ -463,7 +463,7 @@ def main():
     # ------------------------------------------------------------------
     # READ CSV (assume data cleaned แล้ว)
     # ------------------------------------------------------------------
-    csv_path = "clean_data.csv"  # เปลี่ยนชื่อให้ตรงไฟล์ที่คุณใช้
+    csv_path = "../data/clean_data.csv"  # เปลี่ยนชื่อให้ตรงไฟล์ที่คุณใช้
     logger.info(f"Loading data from: {csv_path}")
     df = pd.read_csv(csv_path)
     logger.info(f"Loaded {len(df)} rows, columns: {list(df.columns)}")
