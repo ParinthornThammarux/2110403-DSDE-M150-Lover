@@ -15,7 +15,7 @@ import time
 # 1. CONFIGURATION
 # ==========================================
 # Gemini API Configuration
-GEMINI_API_KEY = "ADDED API KEY"  # Set this as environment variable
+GEMINI_API_KEY = "AIzaSyDSRDdWak3J3akfkvFC-snEuoQUqTLiiJ8"  # Set this as environment variable
 if not GEMINI_API_KEY:
     raise ValueError("Please set GEMINI_API_KEY environment variable. Get your key from: https://aistudio.google.com/apikey")
 
@@ -27,8 +27,8 @@ GEMINI_MODEL = "gemini-2.5-flash-lite"  # Fast and free tier available
 # Optional: Use WangchanBERTa for Thai NER (set to False to disable)
 USE_WANGCHANBERTA_NER = False  # Set to True after installing transformers, torch, pythainlp
 
-INPUT_FILE = r"C:\Users\paeki\OneDrive\Desktop\pun\2110403-DSDE-M150-Lover\Scraper_new\Python Pipeline\MEA scraped\mea_power_outages_page_007.csv"
-OUTPUT_FILE = "mea_power_outages_page_007_gemini.csv"
+INPUT_FILE = r"D:\Chula Year2\DSDE Proj2\2110403-DSDE-M150-Lover\Scraper_new\MEA Scraper\data\external\scraped\mea_power_outages_page_013.csv"
+OUTPUT_FILE = "mea_power_outages_page_013_gemini.csv"
 BATCH_SIZE = 20
 
 # ==========================================
@@ -222,29 +222,6 @@ DISTRICT_COORDS = {
     "default": (13.75, 100.50)  # Central Bangkok fallback
 }
 
-def extract_locations_with_wangchanberta(text):
-    """
-    Optional: Use WangchanBERTa for Thai-specific Named Entity Recognition.
-    Returns list of location entities found in text.
-    """
-    if not USE_WANGCHANBERTA_NER:
-        return []
-
-    try:
-        from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
-
-        # Load WangchanBERTa NER model (cached after first load)
-        tokenizer = AutoTokenizer.from_pretrained("airesearch/wangchanberta-base-att-spm-uncased")
-        model = AutoModelForTokenClassification.from_pretrained("airesearch/wangchanberta-base-att-spm-uncased")
-        nlp = pipeline("ner", model=model, tokenizer=tokenizer)
-
-        # Extract entities
-        entities = nlp(text)
-        locations = [ent['word'] for ent in entities if ent['entity'].startswith('B-LOC') or ent['entity'].startswith('I-LOC')]
-        return locations
-    except Exception as e:
-        print(f"    ⚠️  WangchanBERTa NER failed: {e}")
-        return []
 
 def infer_district_from_location(extracted_district):
     """
