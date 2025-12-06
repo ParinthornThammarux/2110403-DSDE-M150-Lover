@@ -410,7 +410,7 @@ def main():
     # ------------------------------------------------------------------
     # READ CSV (คลีนมาแล้ว ใช้ได้เลย)
     # ------------------------------------------------------------------
-    csv_path = "../data/clean_data.csv"
+    csv_path = "../../data/clean_data.csv"
     logger.info(f"Loading CSV file: {csv_path}")
 
     df = pd.read_csv(csv_path)
@@ -482,8 +482,8 @@ def main():
     # ------------------------------------------------------------------
     # SAVE MODEL (เทรนจาก train แล้ว)
     # ------------------------------------------------------------------
-    Path("ml_models/anomaly_detection").mkdir(parents=True, exist_ok=True)
-    model_path = "ml_models/anomaly_detection/anomaly_if_model.pkl"
+    Path("models").mkdir(parents=True, exist_ok=True)
+    model_path = "models/anomaly_if_model.pkl"
 
     detector.save_model(model_path)
 

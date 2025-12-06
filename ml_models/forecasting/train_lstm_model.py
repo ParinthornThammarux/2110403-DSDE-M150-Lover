@@ -11,9 +11,13 @@ RandomForest Time-Series Forecasting Model for Urban Complaint Prediction
 Compatible with Python 3.13, no TensorFlow required.
 """
 
+
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as plt
+import joblib
+import logging
+from pathlib import Path
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import (
     mean_absolute_error,
@@ -22,13 +26,11 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 
-import matplotlib.pyplot as plt
-import joblib
-import logging
-from pathlib import Path
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Set project root for all file operations
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 # ----------------------------------------------------------------------
@@ -305,7 +307,8 @@ class ComplaintForecaster:
         วาดกราฟเปรียบเทียบ actual vs predicted
         - แสดงหลาย ๆ window ทับกัน (เหมือน version LSTM เดิม)
         """
-        Path("ml_models/forecasting/outputs").mkdir(parents=True, exist_ok=True)
+        outputs_dir = PROJECT_ROOT / "ml_models" / "forecasting" / "outputs"
+        outputs_dir.mkdir(parents=True, exist_ok=True)
 
         plt.figure(figsize=(15, 6))
         n_samples = min(100, len(actuals))
@@ -348,7 +351,7 @@ class ComplaintForecaster:
         plt.legend()
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
-        out_path = "ml_models/forecasting/outputs/predictions_rf.png"
+        out_path = outputs_dir / "predictions_rf.png"
         plt.savefig(out_path, dpi=300)
         plt.close()
         logger.info(f"Predictions plot saved to {out_path}")
@@ -365,7 +368,8 @@ class ComplaintForecaster:
         - Naive baseline
         - 7-day moving average baseline
         """
-        Path("ml_models/forecasting/outputs").mkdir(parents=True, exist_ok=True)
+        outputs_dir = PROJECT_ROOT / "ml_models" / "forecasting" / "outputs"
+        outputs_dir.mkdir(parents=True, exist_ok=True)
 
         mae_model = model_metrics["per_horizon"]["mae"]
         mae_naive = naive_metrics["per_horizon"]["mae"]
@@ -387,7 +391,7 @@ class ComplaintForecaster:
         plt.legend()
         plt.grid(True, axis="y", alpha=0.3)
         plt.tight_layout()
-        out_path = "ml_models/forecasting/outputs/horizon_mae_comparison.png"
+        out_path = outputs_dir / "horizon_mae_comparison.png"
         plt.savefig(out_path, dpi=300)
         plt.close()
         logger.info(f"Horizon MAE comparison plot saved to {out_path}")
@@ -395,26 +399,30 @@ class ComplaintForecaster:
     # ------------------------------------------------------------------
     # SAVE / LOAD
     # ------------------------------------------------------------------
-    def save_model(self, path="ml_models/forecasting/models/rf_forecaster.pkl"):
+    def save_model(self, path=None):
         """เซฟ model + config ด้วย joblib"""
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        models_dir = PROJECT_ROOT / "ml_models" / "forecasting" / "models"
+        models_dir.mkdir(parents=True, exist_ok=True)
+        model_path = models_dir / "rf_forecaster.pkl" if path is None else Path(path)
         joblib.dump(
             {
                 "model": self.model,
                 "lookback_days": self.lookback_days,
                 "forecast_horizon": self.forecast_horizon,
             },
-            path,
+            model_path,
         )
-        logger.info(f"Model saved to {path}")
+        logger.info(f"Model saved to {model_path}")
 
-    def load_model(self, path="ml_models/forecasting/models/rf_forecaster.pkl"):
+    def load_model(self, path=None):
         """โหลด model + config"""
-        obj = joblib.load(path)
+        models_dir = PROJECT_ROOT / "ml_models" / "forecasting" / "models"
+        model_path = models_dir / "rf_forecaster.pkl" if path is None else Path(path)
+        obj = joblib.load(model_path)
         self.model = obj["model"]
         self.lookback_days = obj["lookback_days"]
         self.forecast_horizon = obj["forecast_horizon"]
-        logger.info(f"Model loaded from {path}")
+        logger.info(f"Model loaded from {model_path}")
 
 
 # ----------------------------------------------------------------------
@@ -457,15 +465,17 @@ def main():
     logger.info("RandomForest Complaint Forecasting Model Training (Refactored)")
     logger.info("=" * 80)
 
-    Path("ml_models/forecasting/models").mkdir(parents=True, exist_ok=True)
-    Path("ml_models/forecasting/outputs").mkdir(parents=True, exist_ok=True)
+    models_dir = PROJECT_ROOT / "ml_models" / "forecasting" / "models"
+    outputs_dir = PROJECT_ROOT / "ml_models" / "forecasting" / "outputs"
+    models_dir.mkdir(parents=True, exist_ok=True)
+    outputs_dir.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
     # READ CSV (assume data cleaned แล้ว)
     # ------------------------------------------------------------------
-    csv_path = "../data/clean_data.csv"  # เปลี่ยนชื่อให้ตรงไฟล์ที่คุณใช้
-    logger.info(f"Loading data from: {csv_path}")
-    df = pd.read_csv(csv_path)
+    data_path = PROJECT_ROOT / "data" / "clean_data.csv"
+    logger.info(f"Loading data from: {data_path}")
+    df = pd.read_csv(data_path)
     logger.info(f"Loaded {len(df)} rows, columns: {list(df.columns)}")
 
     # ------------------------------------------------------------------

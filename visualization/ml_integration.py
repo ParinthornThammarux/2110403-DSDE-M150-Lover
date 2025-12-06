@@ -16,8 +16,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Get project root directory (2 levels up from this file)
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+# Get project root directory (parent of visualization folder)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 class MLModelIntegrator:

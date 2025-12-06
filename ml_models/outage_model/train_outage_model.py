@@ -1,6 +1,8 @@
 #ไอเดียโมเดล
 #แบ่งเหตุไฟดับออกเป็น “กลุ่มพฤติกรรมคล้ายกัน เช่น คลัสเตอร์ไฟดับตอนเช้า-วันทำงาน
 
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 
@@ -16,7 +18,9 @@ import joblib
 # ================================
 # 1) Load data
 # ================================
-df = pd.read_csv("../data/clean_scraping_data.csv")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+df = pd.read_csv(PROJECT_ROOT / "data" / "clean_scraping_data.csv")
 
 # ตรวจดูว่าคอลัมน์หลัก ๆ มีอยู่ไหม
 required_cols = [
@@ -180,8 +184,11 @@ print(
 # ================================
 # 8) Save model & clustered data
 # ================================
-joblib.dump(final_model, "ml_models/outage_model/model/outage_kmeans_model.pkl")
-df.to_csv("ml_models/outage_model/model/power_outage_with_clusters.csv", index=False)
+model_dir = PROJECT_ROOT / "ml_models" / "outage_model" / "model"
+model_dir.mkdir(parents=True, exist_ok=True)
+
+joblib.dump(final_model, model_dir / "outage_kmeans_model.pkl")
+df.to_csv(model_dir / "power_outage_with_clusters.csv", index=False)
 
 print("\nModel saved as: outage_kmeans_model.pkl")
 print("Clustered data saved as: power_outage_with_clusters.csv")

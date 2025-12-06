@@ -21,9 +21,6 @@ import sys
 # Add current directory to path
 sys.path.append(str(Path(__file__).parent))
 
-# Get project root directory (2 levels up from this file)
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-
 # Import custom modules
 from viz_modules import (
     plot_complaints_by_district,
@@ -112,7 +109,7 @@ def load_data():
     คำอธิบาย: อ่านข้อมูลที่ผ่านการทำความสะอาดแล้ว
     ประมวลผลเพื่อใช้งานในระบบ รวมถึงแปลง one-hot encoding กลับเป็นค่าเดิม
     """
-    csv_path = PROJECT_ROOT / 'clean_data.csv'
+    csv_path = Path("../data/clean_data.csv")
 
     if not csv_path.exists():
         st.error(f"ไม่พบไฟล์ข้อมูล: {csv_path}")
@@ -670,7 +667,7 @@ def main():
             st.info("กรุณา train โมเดลโดยรันไฟล์: `ml_models/outage_model/train_outage_model.py`")
         else:
             # Load outage data with clusters
-            outage_data_path = PROJECT_ROOT / 'ml_models' / 'outage_model' / 'models' / 'power_outage_with_clusters.csv'
+            outage_data_path = Path("../ml_models/outage_model/models/power_outage_with_clusters.csv")
 
             if not outage_data_path.exists():
                 st.error(f"ไม่พบไฟล์ข้อมูลคลัสเตอร์: {outage_data_path}")
