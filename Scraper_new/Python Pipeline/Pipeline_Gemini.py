@@ -1,6 +1,7 @@
 import pandas as pd
 import instructor
-from openai import OpenAI
+from google import genai
+from google.genai import types
 from pydantic import BaseModel, Field
 from typing import List
 import openmeteo_requests
@@ -8,24 +9,27 @@ import requests_cache
 from retry_requests import retry
 import os
 import datetime
+import time
 
 # ==========================================
 # 1. CONFIGURATION
 # ==========================================
-# Ollama runs locally on port 11434 by default
-OLLAMA_BASE_URL = "http://localhost:11434/v1"
-LOCAL_MODEL = "ministral-3:3b"  # Using 3B for 8GB VRAM (laptop GPU)
-# Other good options:
-# - "qwen2.5-coder:3b" (faster, less RAM)
-# - "ministral-3b" (very fast, small)
-# - "deepseek-r1:7b" (good reasoning)
-# - "phi4:14b" (best quality, needs more RAM)
+# Gemini API Configuration
+GEMINI_API_KEY = "ADDED API KEY"  # Set this as environment variable
+if not GEMINI_API_KEY:
+    raise ValueError("Please set GEMINI_API_KEY environment variable. Get your key from: https://aistudio.google.com/apikey")
+
+GEMINI_MODEL = "gemini-2.5-flash-lite"  # Fast and free tier available
+# Other options:
+# - "gemini-1.5-flash" (stable, fast)
+# - "gemini-1.5-pro" (more capable, slower)
 
 # Optional: Use WangchanBERTa for Thai NER (set to False to disable)
 USE_WANGCHANBERTA_NER = False  # Set to True after installing transformers, torch, pythainlp
 
-INPUT_FILE = r"C:\Users\paeki\OneDrive\Desktop\pun\2110403-DSDE-M150-Lover\Scraper_new\Python Pipeline\MEA scraped\mea_power_outages_page_001.csv"
-OUTPUT_FILE = "mea_power_outages_page_001.csv"
+INPUT_FILE = r"C:\Users\paeki\OneDrive\Desktop\pun\2110403-DSDE-M150-Lover\Scraper_new\Python Pipeline\MEA scraped\mea_power_outages_page_007.csv"
+OUTPUT_FILE = "mea_power_outages_page_007_gemini.csv"
+BATCH_SIZE = 20
 
 # ==========================================
 # 2. DEFINE DATA STRUCTURE
@@ -36,10 +40,9 @@ class OutageEvent(BaseModel):
     location_detail: str = Field(..., description="Specific street, soi, or village.")
     district: str = Field(
         default="Unknown",
-        description="IMPORTANT: Extract the District name if explicitly mentioned. "
-                    "Examples: 'Pathumwan', 'Bang Kapi', 'Din Daeng', 'Vadhana'. "
-                    "If the text only mentions a road name (like 'Lat Phrao Road') without a district, return 'Unknown'. "
-                    "Only return a district if it's clearly stated in the text."
+        description="Infer the Bangkok district from the location detail. "
+                    "Use your knowledge of Bangkok geography. For example, if the location is 'Siam Paragon', the district should be 'Pathumwan'. "
+                    "If you cannot infer a district, return 'Unknown'."
     )
     province: str = Field(
         default="Bangkok",
@@ -52,48 +55,50 @@ class DailyOutageSchedule(BaseModel):
 # ==========================================
 # 3. HELPER FUNCTIONS
 # ==========================================
-def extract_events_with_local_llm(row_text, date_context):
-    """Sends text to local LLM (via Ollama) to extract structured JSON."""
+def extract_events_with_gemini(row_text, date_context):
+    """Sends text to Gemini API to extract structured JSON."""
     if not isinstance(row_text, str) or not row_text.strip():
         return []
 
-    # Configure local OpenAI-compatible client
-    local_client = OpenAI(
-        base_url=OLLAMA_BASE_URL,
-        api_key="ollama"  # Ollama doesn't need a real API key
-    )
+    # Configure Gemini client
+    gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
-    print(f"  [DEBUG] Using local model: {LOCAL_MODEL} for date: {date_context}")
+    print(f"  [DEBUG] Using Gemini model: {GEMINI_MODEL} for date: {date_context}")
 
-    # Create instructor client with OpenAI mode
-    client = instructor.from_openai(
-        local_client,
-        mode=instructor.Mode.JSON
+    # Create instructor client with Gemini mode
+    client = instructor.from_genai(
+        client=gemini_client,
+        mode=instructor.Mode.GENAI_STRUCTURED_OUTPUTS
     )
 
     try:
-        print(f"  [DEBUG] Sending request to local LLM...")
+        print(f"  [DEBUG] Sending request to Gemini API...")
         resp = client.chat.completions.create(
-            model=LOCAL_MODEL,
+            model=GEMINI_MODEL,
             response_model=DailyOutageSchedule,
             messages=[
                 {
-                    "role": "system",
-                    "content": "You are an expert at extracting structured data from power outage announcements. "
-                               "The text is in English. Extract time periods, specific street/soi names, and district if mentioned. "
-                               "Common Bangkok districts: Pathumwan, Bang Kapi, Din Daeng, Huai Khwang, Vadhana, Khlong Toei, Don Mueang, etc."
-                },
-                {
                     "role": "user",
-                    "content": f"Date: {date_context}\n\nExtract all power outage events from this English text. "
-                               f"For each event, extract the time range and location details:\n\n{row_text}"
+                    "content": f"""You are an expert at extracting structured data from power outage announcements and you have deep knowledge of Bangkok's geography.
+The text is in English. For each power outage event, extract the time range and the specific location.
+Based on the location, infer the corresponding district in Bangkok.
+
+For example, if the location mentioned is 'Siam Paragon', you should infer the district as 'Pathumwan'.
+If a street name can be in multiple districts, use other information in the text to infer the most likely one.
+If no specific district can be inferred, you can use 'Unknown'.
+
+Date: {date_context}
+
+Extract all power outage events from this English text.
+
+{row_text}"""
                 }
             ],
         )
-        print(f"  [DEBUG] Received {len(resp.events)} events from local LLM")
+        print(f"  [DEBUG] Received {len(resp.events)} events from Gemini")
         return resp.events
     except Exception as e:
-        print(f"  [!] AI Error on {date_context}: {e}")
+        print(f"  [!] Gemini API Error on {date_context}: {e}")
         import traceback
         print(f"  [DEBUG] Full traceback:\n{traceback.format_exc()}")
         return []
@@ -241,31 +246,10 @@ def extract_locations_with_wangchanberta(text):
         print(f"    ⚠️  WangchanBERTa NER failed: {e}")
         return []
 
-def infer_district_from_location(location_text, extracted_district):
+def infer_district_from_location(extracted_district):
     """
-    Infer district from location details like street names or areas.
-    Falls back to LLM-extracted district, then to default.
+    Tries to map the LLM-extracted district to a Thai name for coordinate lookup.
     """
-    if not location_text or pd.isna(location_text):
-        location_text = ""
-
-    # Optional: First try WangchanBERTa NER for location extraction
-    if USE_WANGCHANBERTA_NER:
-        ner_locations = extract_locations_with_wangchanberta(location_text)
-        for loc in ner_locations:
-            # Check if NER found a known district
-            if loc in DISTRICT_COORDS:
-                print(f"    🤖 WangchanBERTa found district: '{loc}'")
-                return loc
-
-    # Second, try to find area/street keywords in the location text (case-insensitive)
-    location_lower = location_text.lower()
-    for area_keyword, district in AREA_TO_DISTRICT.items():
-        if area_keyword.lower() in location_lower:
-            print(f"    🔍 Inferred '{district}' from area keyword '{area_keyword}' in location")
-            return district
-
-    # Third, use the LLM-extracted district if available and map to Thai if English
     if extracted_district and not pd.isna(extracted_district) and extracted_district != "Unknown":
         # Try to map English district name to Thai
         if extracted_district in AREA_TO_DISTRICT:
@@ -276,11 +260,11 @@ def infer_district_from_location(location_text, extracted_district):
         elif extracted_district in DISTRICT_COORDS:
             return extracted_district
         else:
-            print(f"    ⚠️  Unknown district name '{extracted_district}', using default")
+            print(f"    ⚠️  Unknown district name from LLM '{extracted_district}', using default")
             return "default"
 
     # Default fallback
-    print(f"    ⚠️  Could not infer district from '{location_text[:50] if len(location_text) > 50 else location_text}', using default")
+    print(f"    ⚠️  LLM did not provide a district, using default")
     return "default"
 
 def get_district_coords(district):
@@ -304,7 +288,7 @@ def get_district_coords(district):
 def fetch_weather_history(dates, lat=13.75, long=100.50):
     """Fetches valid historical weather for the given dates."""
     print(f"☁️ Fetching weather for {len(dates)} days at ({lat:.2f}, {long:.2f})...")
-    
+
     # Open-Meteo Archive requires a start/end range
     # It has a ~5 day lag. We filter later, but the request asks for the range.
     start_date = dates.min().strftime('%Y-%m-%d')
@@ -328,7 +312,7 @@ def fetch_weather_history(dates, lat=13.75, long=100.50):
     try:
         responses = openmeteo.weather_api(url, params=params)
         response = responses[0]
-        
+
         # Process Hourly Data
         hourly = response.Hourly()
         hourly_data = {
@@ -344,62 +328,113 @@ def fetch_weather_history(dates, lat=13.75, long=100.50):
         hourly_data["wind_gust"] = hourly.Variables(2).ValuesAsNumpy()
 
         weather_df = pd.DataFrame(data = hourly_data)
-        
+
         # Aggregate Hourly -> Daily (Max Temp, Total Rain, Max Gust)
         # Note: We align by DATE only
         weather_df['date_key'] = weather_df['date'].dt.strftime('%Y-%m-%d')
-        
+
         daily_weather = weather_df.groupby('date_key').agg({
             'temp': 'max',
             'rain': 'sum',
             'wind_gust': 'max'
         }).reset_index()
-        
+
         return daily_weather
 
     except Exception as e:
         print(f"  [!] Weather API Error: {e}")
         return pd.DataFrame()
 
+def add_weather_data(structured_df, weather_cache):
+    """Fetches and merges weather data for the events in the DataFrame."""
+    if structured_df.empty:
+        return structured_df
+
+    print("☁️  Fetching and merging weather data...")
+
+    structured_df['temp'] = None
+    structured_df['rain'] = None
+    structured_df['wind_gust'] = None
+
+    for idx, row in structured_df.iterrows():
+        date_obj = pd.to_datetime(row['date'])
+        archive_cutoff = pd.Timestamp.now().normalize() - pd.Timedelta(days=5)
+
+        if date_obj >= archive_cutoff:
+            continue
+
+        district = infer_district_from_location(row['district'])
+        date_str = row['date']
+        cache_key = f"{district}_{date_str}"
+
+        if cache_key in weather_cache:
+            weather = weather_cache[cache_key]
+        else:
+            lat, lon = get_district_coords(district)
+            date_series = pd.Series([pd.to_datetime(date_str)])
+            weather_df = fetch_weather_history(date_series, lat=lat, long=lon)
+
+            if not weather_df.empty:
+                weather = {
+                    'temp': weather_df.iloc[0]['temp'],
+                    'rain': weather_df.iloc[0]['rain'],
+                    'wind_gust': weather_df.iloc[0]['wind_gust']
+                }
+                weather_cache[cache_key] = weather
+            else:
+                weather = None
+
+        if weather:
+            structured_df.at[idx, 'temp'] = weather['temp']
+            structured_df.at[idx, 'rain'] = weather['rain']
+            structured_df.at[idx, 'wind_gust'] = weather['wind_gust']
+
+    return structured_df
+
+
 # ==========================================
 # 4. MAIN PIPELINE
 # ==========================================
 def main():
-    print("🚀 Starting Pipeline...")
-    
+    print("🚀 Starting Pipeline with Gemini API...")
+
     # --- STEP 1: LOAD & FILTER DATES ---
     df = pd.read_csv(INPUT_FILE)
     df['outage_date'] = pd.to_datetime(df['outage_date'])
-    
-    # The Filter: Keep only dates strictly BEFORE "Tomorrow"
-    # We also buffer 5 days for the Weather Archive (it lags slightly)
+
     today = pd.Timestamp.now().normalize()
     archive_cutoff = today - pd.Timedelta(days=5)
     
-    # Set 1: Valid History (We can get weather for these)
     valid_history_df = df[df['outage_date'] < archive_cutoff].copy()
-    
-    # Set 2: Recent/Future (We keep them, but skip weather fetch to avoid errors)
     recent_df = df[df['outage_date'] >= archive_cutoff].copy()
-    # If you strictly want to DELETE future data (Dec 5th):
-    recent_df = recent_df[recent_df['outage_date'] <= today] 
+    recent_df = recent_df[recent_df['outage_date'] <= today]
 
     print(f"   - Total Rows: {len(df)}")
     print(f"   - Valid History (Weather Available): {len(valid_history_df)}")
     print(f"   - Recent/Today (Weather Skipped): {len(recent_df)}")
-    print(f"   - Future Dropped: {len(df) - len(valid_history_df) - len(recent_df)}")
 
-    # --- STEP 2: EXTRACT STRUCTURE (Gemini) ---
+    # --- STEP 2: EXTRACT AND SAVE IN BATCHES ---
     all_extracted_events = []
-    
-    # Process both sets (we still want the location data for recent days)
+    weather_cache = {}
+    output_file_exists = os.path.exists(OUTPUT_FILE)
+
+    if output_file_exists:
+        print(f"⚠️ Output file '{OUTPUT_FILE}' exists and will be overwritten.")
+        os.remove(OUTPUT_FILE)
+        output_file_exists = False
+
     processing_queue = pd.concat([valid_history_df, recent_df])
-    
-    print(f"\n🧠 Extracting data from {len(processing_queue)} rows with local LLM...")
+    # Sort by date descending (newest first) to match input CSV order
+    processing_queue = processing_queue.sort_values('outage_date', ascending=False).reset_index(drop=True)
+
+    print(f"\n🧠 Extracting data from {len(processing_queue)} rows with Gemini API...")
+
     for index, row in processing_queue.iterrows():
+        print(f"  - Processing row {index + 1}/{len(processing_queue)}")
         date_str = row['outage_date'].strftime('%Y-%m-%d')
-        events = extract_events_with_local_llm(row['outage_data'], date_str)
-        
+        events = extract_events_with_gemini(row['outage_data'], date_str)
+        time.sleep(1)
+
         for event in events:
             all_extracted_events.append({
                 "date": date_str,
@@ -410,68 +445,33 @@ def main():
                 "district": event.district,
                 "province": event.province
             })
+
+        if (index + 1) % BATCH_SIZE == 0 or (index + 1) == len(processing_queue):
+            if not all_extracted_events:
+                continue
+
+            print(f"\n--- Processing batch of {len(all_extracted_events)} extracted events ---")
+            batch_df = pd.DataFrame(all_extracted_events)
             
-    structured_df = pd.DataFrame(all_extracted_events)
-    
-    # --- STEP 3: MERGE WEATHER ---
-    if not structured_df.empty:
-        print("\n☁️  Fetching Weather Data per District...")
+            # Add weather data
+            batch_df = add_weather_data(batch_df, weather_cache)
 
-        # Add weather columns
-        structured_df['temp'] = None
-        structured_df['rain'] = None
-        structured_df['wind_gust'] = None
-
-        # Group by district and date to minimize API calls
-        weather_cache = {}
-
-        for idx, row in structured_df.iterrows():
-            # Only fetch weather for historical dates (not recent/future)
-            date_obj = pd.to_datetime(row['date'])
-            archive_cutoff = pd.Timestamp.now().normalize() - pd.Timedelta(days=5)
-
-            if date_obj >= archive_cutoff:
-                continue  # Skip recent dates (no weather available)
-
-            # Infer district from location + LLM extraction
-            district = infer_district_from_location(row['location'], row['district'])
-            date_str = row['date']
-            cache_key = f"{district}_{date_str}"
-
-            # Check cache first
-            if cache_key in weather_cache:
-                weather = weather_cache[cache_key]
+            # Save batch
+            print(f"💾 Saving batch to '{OUTPUT_FILE}'...")
+            if not output_file_exists:
+                batch_df.to_csv(OUTPUT_FILE, index=False, mode='w')
+                output_file_exists = True
             else:
-                # Get coordinates for this district
-                lat, lon = get_district_coords(district)
-
-                # Fetch weather for this specific date and location
-                date_series = pd.Series([pd.to_datetime(date_str)])
-                weather_df = fetch_weather_history(date_series, lat=lat, long=lon)
-
-                if not weather_df.empty:
-                    weather = {
-                        'temp': weather_df.iloc[0]['temp'],
-                        'rain': weather_df.iloc[0]['rain'],
-                        'wind_gust': weather_df.iloc[0]['wind_gust']
-                    }
-                    weather_cache[cache_key] = weather
-                else:
-                    weather = None
-
-            # Apply weather to this row
-            if weather:
-                structured_df.at[idx, 'temp'] = weather['temp']
-                structured_df.at[idx, 'rain'] = weather['rain']
-                structured_df.at[idx, 'wind_gust'] = weather['wind_gust']
-
-        final_df = structured_df
+                batch_df.to_csv(OUTPUT_FILE, index=False, mode='a', header=False)
             
-        # --- STEP 4: SAVE ---
-        final_df.to_csv(OUTPUT_FILE, index=False)
-        print(f"\n✅ Done! Saved {len(final_df)} events to {OUTPUT_FILE}")
+            all_extracted_events = [] # Reset for next batch
+
+    print(f"\n✅ Done! All batches saved to {OUTPUT_FILE}")
+    # Displaying the head of the final file for verification
+    if os.path.exists(OUTPUT_FILE):
+        final_df = pd.read_csv(OUTPUT_FILE)
+        print("\nFinal Data Preview:")
         print(final_df.head())
-        print("\nNote: Rows with empty weather columns are from the last 5 days (Archive lag).")
 
 if __name__ == "__main__":
     main()

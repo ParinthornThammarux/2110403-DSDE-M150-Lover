@@ -1,0 +1,29 @@
+# Visualization Requirements
+# Interactive Dashboard & Graph Network Analysis
+
+# Core Data Science Libraries
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization Libraries
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# Interactive Dashboard
+streamlit>=1.28.0
+streamlit-folium>=0.15.0
+
+# Geospatial Visualization
+folium>=0.14.0
+
+# Network Analysis
+networkx>=3.1
+pyvis>=0.3.2
+
+# Machine Learning (for forecasting integration)
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# Utilities
+python-dateutil>=2.8.0
