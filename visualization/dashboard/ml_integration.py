@@ -16,6 +16,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Get project root directory (2 levels up from this file)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
 
 class MLModelIntegrator:
     """Integrates all ML models for the dashboard"""
@@ -25,20 +28,44 @@ class MLModelIntegrator:
         self.anomaly_model = None
         self.anomaly_detector = None
         self.outage_model = None
+        # Forecasting model parameters
+        self.lookback_days = 30
+        self.forecast_horizon = 7
 
-    def load_forecasting_model(self, model_path: str = 'forecasting/outputs/rf_model.pkl'):
+    def load_forecasting_model(self, model_path: str = None):
         """
         Load RandomForest forecasting model
 
         คำอธิบาย: โหลดโมเดลการพยากรณ์ที่ train ไว้แล้ว
         ใช้ทำนายจำนวน complaint ในอนาคต
         """
+        if model_path is None:
+            model_path = PROJECT_ROOT / 'ml_models' / 'forecasting' / 'models' / 'rf_forecaster.pkl'
+        else:
+            model_path = Path(model_path)
+            if not model_path.is_absolute():
+                model_path = PROJECT_ROOT / model_path
+
         try:
-            if Path(model_path).exists():
-                # Load the new model format (direct RandomForest model)
-                self.rf_model = joblib.load(model_path)
-                logger.info(f"Loaded forecasting model from {model_path}")
-                logger.info(f"Model type: {type(self.rf_model)}")
+            if model_path.exists():
+                # Load the model (stored as a dict with 'model', 'lookback_days', 'forecast_horizon')
+                model_data = joblib.load(model_path)
+
+                # Extract the actual model from the dictionary if needed
+                if isinstance(model_data, dict) and 'model' in model_data:
+                    self.rf_model = model_data['model']
+                    self.lookback_days = model_data.get('lookback_days', 30)
+                    self.forecast_horizon = model_data.get('forecast_horizon', 7)
+                    logger.info(f"Loaded forecasting model from {model_path}")
+                    logger.info(f"Model type: {type(self.rf_model)}")
+                    logger.info(f"Lookback days: {self.lookback_days}, Forecast horizon: {self.forecast_horizon}")
+                else:
+                    # Fallback for direct model format
+                    self.rf_model = model_data
+                    self.lookback_days = 30
+                    self.forecast_horizon = 7
+                    logger.info(f"Loaded direct forecasting model from {model_path}")
+                    logger.info(f"Model type: {type(self.rf_model)}")
                 return True
             else:
                 logger.warning(f"Forecasting model not found at {model_path}")
@@ -47,15 +74,22 @@ class MLModelIntegrator:
             logger.error(f"Error loading forecasting model: {e}")
             return False
 
-    def load_anomaly_model(self, model_path: str = 'ml_models/anomaly_detection/anomaly_if_model.pkl'):
+    def load_anomaly_model(self, model_path: str = None):
         """
         Load Isolation Forest anomaly detection model
 
         คำอธิบาย: โหลดโมเดลตรวจจับความผิดปกติที่ train ไว้แล้ว
         ใช้หา complaint ที่มีพฤติกรรมผิดปกติ
         """
+        if model_path is None:
+            model_path = PROJECT_ROOT / 'ml_models' / 'anomaly_detection' / 'anomaly_if_model.pkl'
+        else:
+            model_path = Path(model_path)
+            if not model_path.is_absolute():
+                model_path = PROJECT_ROOT / model_path
+
         try:
-            if Path(model_path).exists():
+            if model_path.exists():
                 self.anomaly_model = joblib.load(model_path)
                 logger.info(f"Loaded anomaly detection model from {model_path}")
                 return True
@@ -66,15 +100,22 @@ class MLModelIntegrator:
             logger.error(f"Error loading anomaly model: {e}")
             return False
 
-    def load_outage_model(self, model_path: str = 'ml_models/outage_model/models/outage_kmeans_model.pkl'):
+    def load_outage_model(self, model_path: str = None):
         """
         Load K-Means outage clustering model
 
         คำอธิบาย: โหลดโมเดลจัดกลุ่มพฤติกรรมไฟดับที่ train ไว้แล้ว
         ใช้วิเคราะห์รูปแบบการเกิดไฟดับ
         """
+        if model_path is None:
+            model_path = PROJECT_ROOT / 'ml_models' / 'outage_model' / 'models' / 'outage_kmeans_model.pkl'
+        else:
+            model_path = Path(model_path)
+            if not model_path.is_absolute():
+                model_path = PROJECT_ROOT / model_path
+
         try:
-            if Path(model_path).exists():
+            if model_path.exists():
                 self.outage_model = joblib.load(model_path)
                 logger.info(f"Loaded outage clustering model from {model_path}")
                 return True
@@ -131,10 +172,10 @@ class MLModelIntegrator:
         """
         Generate predictions using the sequence-based RandomForest model
 
-        The model expects sequences with lookback_days=30 and returns forecast_horizon=7 day predictions
+        The model expects sequences with lookback_days and returns forecast_horizon day predictions
         """
-        lookback_days = 30
-        forecast_horizon = 7  # Model was trained to predict 7 days ahead
+        lookback_days = self.lookback_days
+        forecast_horizon = self.forecast_horizon
 
         # Prepare daily data with features (matching training format)
         daily_data = daily_counts.set_index('date')
