@@ -508,73 +508,73 @@ def main():
 
         st.plotly_chart(plot_complaint_distribution_across_districts(df_filtered, district_filter_1), use_container_width=True)
 
-        st.markdown("---")
+        #st.markdown("---")
 
-        # 5.) Time series: complaints over time with filters
-        st.subheader("Time Series: จำนวน Complaint ตามเวลา")
+        # # 5.) Time series: complaints over time with filters
+        # st.subheader("Time Series: จำนวน Complaint ตามเวลา")
 
-        st.markdown("""
-        <div class="info-box">
-        <b>คำอธิบาย:</b> แสดงจำนวน complaint ต่อวัน โดยสามารถเลือกช่วงเวลาและจังหวัดได้ 
-        เพื่อดูแนวโน้มการเกิดปัญหาในช่วงต่าง ๆ
-        </div>
-        """, unsafe_allow_html=True)
+        # st.markdown("""
+        # <div class="info-box">
+        # <b>คำอธิบาย:</b> แสดงจำนวน complaint ต่อวัน โดยสามารถเลือกช่วงเวลาและจังหวัดได้ 
+        # เพื่อดูแนวโน้มการเกิดปัญหาในช่วงต่าง ๆ
+        # </div>
+        # """, unsafe_allow_html=True)
 
-        # Ensure timestamp/date are in proper format
-        df_ts = df_filtered.copy()
-        if "timestamp" in df_ts.columns:
-            # Always try to convert to datetime, safe even if already datetime
-            df_ts["timestamp"] = pd.to_datetime(df_ts["timestamp"], errors="coerce")
-            min_date = df_ts["timestamp"].dt.date.min()
-            max_date = df_ts["timestamp"].dt.date.max()
-        else:
-            df_ts["date"] = pd.to_datetime(df_ts["date"], errors="coerce")
-            min_date = df_ts["date"].dt.date.min()
-            max_date = df_ts["date"].dt.date.max()
+        # # Ensure timestamp/date are in proper format
+        # df_ts = df_filtered.copy()
+        # if "timestamp" in df_ts.columns:
+        #     # Always try to convert to datetime, safe even if already datetime
+        #     df_ts["timestamp"] = pd.to_datetime(df_ts["timestamp"], errors="coerce")
+        #     min_date = df_ts["timestamp"].dt.date.min()
+        #     max_date = df_ts["timestamp"].dt.date.max()
+        # else:
+        #     df_ts["date"] = pd.to_datetime(df_ts["date"], errors="coerce")
+        #     min_date = df_ts["date"].dt.date.min()
+        #     max_date = df_ts["date"].dt.date.max()
 
 
-        # UI controls for time series (in main area, not sidebar)
-        col1, col2 = st.columns(2)
+        # # UI controls for time series (in main area, not sidebar)
+        # col1, col2 = st.columns(2)
 
-        with col1:
-            date_range = st.date_input(
-                "Select date range",
-                value=(min_date, max_date),
-                min_value=min_date,
-                max_value=max_date
-            )
+        # with col1:
+        #     date_range = st.date_input(
+        #         "Select date range",
+        #         value=(min_date, max_date),
+        #         min_value=min_date,
+        #         max_value=max_date
+        #     )
 
-        with col2:
-            if "province" in df_ts.columns:
-                province_options = sorted(df_ts["province"].dropna().unique())
-                selected_provinces = st.multiselect(
-                    "Select provinces",
-                    options=province_options,
-                    default=province_options  # show all by default
-                )
-            else:
-                selected_provinces = None
+        # with col2:
+        #     if "province" in df_ts.columns:
+        #         province_options = sorted(df_ts["province"].dropna().unique())
+        #         selected_provinces = st.multiselect(
+        #             "Select provinces",
+        #             options=province_options,
+        #             default=province_options  # show all by default
+        #         )
+        #     else:
+        #         selected_provinces = None
 
-        # Apply filters
-        start_date, end_date = date_range
-        if "timestamp" in df_ts.columns:
-            df_ts = df_ts[
-                (df_ts["timestamp"].dt.date >= start_date)
-                & (df_ts["timestamp"].dt.date <= end_date)
-            ]
-        else:
-            df_ts = df_ts[
-                (df_ts["date"].dt.date >= start_date)
-                & (df_ts["date"].dt.date <= end_date)
-            ]
+        # # Apply filters
+        # start_date, end_date = date_range
+        # if "timestamp" in df_ts.columns:
+        #     df_ts = df_ts[
+        #         (df_ts["timestamp"].dt.date >= start_date)
+        #         & (df_ts["timestamp"].dt.date <= end_date)
+        #     ]
+        # else:
+        #     df_ts = df_ts[
+        #         (df_ts["date"].dt.date >= start_date)
+        #         & (df_ts["date"].dt.date <= end_date)
+        #     ]
 
-        if selected_provinces is not None and len(selected_provinces) > 0:
-            df_ts = df_ts[df_ts["province"].isin(selected_provinces)]
+        # if selected_provinces is not None and len(selected_provinces) > 0:
+        #     df_ts = df_ts[df_ts["province"].isin(selected_provinces)]
 
-        if df_ts.empty:
-            st.warning("ไม่มีข้อมูลในช่วงวันที่และจังหวัดที่เลือก")
-        else:
-                st.plotly_chart(plot_complaint_timeseries(df_ts), use_container_width=True)
+        # if df_ts.empty:
+        #     st.warning("ไม่มีข้อมูลในช่วงวันที่และจังหวัดที่เลือก")    
+        # else:
+        #         st.plotly_chart(plot_complaint_timeseries(df_ts), use_container_width=True)
 
     # Tab 3: MEA power outage
     with tab3:
