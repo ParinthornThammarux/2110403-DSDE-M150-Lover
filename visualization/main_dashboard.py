@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 import folium
 import pydeck as pdk
-from viz_modules import plot_complaint_timeseries, plot_top_complaint_types
+# from viz_modules import plot_complaint_timeseries, plot_top_complaint_types
 from folium.plugins import HeatMap, MarkerCluster
 from streamlit_folium import folium_static
 from datetime import date, datetime, timedelta
@@ -32,6 +32,7 @@ from viz_modules import (
     plot_time_series_comparison,
     plot_hourly_pattern,
     plot_weekday_pattern,
+    # plot_complaint_timeseries,  # Commented out - not currently used
 )
 
 from ml_integration import (
@@ -51,7 +52,7 @@ from outage_viz import (
     render_cluster_summary,
     prepare_outage_dataframe,
     plot_outage_duration_by_district,
-    plot_outage_timeline
+    #plot_outage_timeline
 )
 
 # Page configuration
@@ -510,71 +511,71 @@ def main():
 
         st.markdown("---")
 
-        # 5.) Time series: complaints over time with filters
-        st.subheader("Time Series: จำนวน Complaint ตามเวลา")
+        # # 5.) Time series: complaints over time with filters
+        # st.subheader("Time Series: จำนวน Complaint ตามเวลา")
 
-        st.markdown("""
-        <div class="info-box">
-        <b>คำอธิบาย:</b> แสดงจำนวน complaint ต่อวัน โดยสามารถเลือกช่วงเวลาและจังหวัดได้ 
-        เพื่อดูแนวโน้มการเกิดปัญหาในช่วงต่าง ๆ
-        </div>
-        """, unsafe_allow_html=True)
+        # st.markdown("""
+        # <div class="info-box">
+        # <b>คำอธิบาย:</b> แสดงจำนวน complaint ต่อวัน โดยสามารถเลือกช่วงเวลาและเขตได้
+        # เพื่อดูแนวโน้มการเกิดปัญหาในช่วงต่าง ๆ
+        # </div>
+        # """, unsafe_allow_html=True)
 
-        # Ensure timestamp/date are in proper format
-        df_ts = df_filtered.copy()
-        if "timestamp" in df_ts.columns:
-            # Always try to convert to datetime, safe even if already datetime
-            df_ts["timestamp"] = pd.to_datetime(df_ts["timestamp"], errors="coerce")
-            min_date = df_ts["timestamp"].dt.date.min()
-            max_date = df_ts["timestamp"].dt.date.max()
-        else:
-            df_ts["date"] = pd.to_datetime(df_ts["date"], errors="coerce")
-            min_date = df_ts["date"].dt.date.min()
-            max_date = df_ts["date"].dt.date.max()
+        # # Ensure timestamp/date are in proper format
+        # df_ts = df_filtered.copy()
+        # if "timestamp" in df_ts.columns:
+        #     # Always try to convert to datetime, safe even if already datetime
+        #     df_ts["timestamp"] = pd.to_datetime(df_ts["timestamp"], errors="coerce")
+        #     min_date = df_ts["timestamp"].dt.date.min()
+        #     max_date = df_ts["timestamp"].dt.date.max()
+        # else:
+        #     df_ts["date"] = pd.to_datetime(df_ts["date"], errors="coerce")
+        #     min_date = df_ts["date"].dt.date.min()
+        #     max_date = df_ts["date"].dt.date.max()
 
 
-        # UI controls for time series (in main area, not sidebar)
-        col1, col2 = st.columns(2)
+        # # UI controls for time series (in main area, not sidebar)
+        # col1, col2 = st.columns(2)
 
-        with col1:
-            date_range = st.date_input(
-                "Select date range",
-                value=(min_date, max_date),
-                min_value=min_date,
-                max_value=max_date
-            )
+        # with col1:
+        #     date_range = st.date_input(
+        #         "Select date range",
+        #         value=(min_date, max_date),
+        #         min_value=min_date,
+        #         max_value=max_date
+        #     )
 
-        with col2:
-            if "province" in df_ts.columns:
-                province_options = sorted(df_ts["province"].dropna().unique())
-                selected_provinces = st.multiselect(
-                    "Select provinces",
-                    options=province_options,
-                    default=province_options  # show all by default
-                )
-            else:
-                selected_provinces = None
+        # with col2:
+        #     if "district" in df_ts.columns:
+        #         district_options = sorted(df_ts["district"].dropna().unique())
+        #         selected_districts = st.multiselect(
+        #             "Select districts",
+        #             options=district_options,
+        #             default=district_options  # show all by default
+        #         )
+        #     else:
+        #         selected_districts = None
 
-        # Apply filters
-        start_date, end_date = date_range
-        if "timestamp" in df_ts.columns:
-            df_ts = df_ts[
-                (df_ts["timestamp"].dt.date >= start_date)
-                & (df_ts["timestamp"].dt.date <= end_date)
-            ]
-        else:
-            df_ts = df_ts[
-                (df_ts["date"].dt.date >= start_date)
-                & (df_ts["date"].dt.date <= end_date)
-            ]
+        # # Apply filters
+        # start_date, end_date = date_range
+        # if "timestamp" in df_ts.columns:
+        #     df_ts = df_ts[
+        #         (df_ts["timestamp"].dt.date >= start_date)
+        #         & (df_ts["timestamp"].dt.date <= end_date)
+        #     ]
+        # else:
+        #     df_ts = df_ts[
+        #         (df_ts["date"].dt.date >= start_date)
+        #         & (df_ts["date"].dt.date <= end_date)
+        #     ]
 
-        if selected_provinces is not None and len(selected_provinces) > 0:
-            df_ts = df_ts[df_ts["province"].isin(selected_provinces)]
+        # if selected_districts is not None and len(selected_districts) > 0:
+        #     df_ts = df_ts[df_ts["district"].isin(selected_districts)]
 
-        if df_ts.empty:
-            st.warning("ไม่มีข้อมูลในช่วงวันที่และจังหวัดที่เลือก")
-        else:
-                st.plotly_chart(plot_complaint_timeseries(df_ts), use_container_width=True)
+        # if df_ts.empty:
+        #     st.warning("ไม่มีข้อมูลในช่วงวันที่และเขตที่เลือก")
+        # else:
+        #         st.plotly_chart(plot_complaint_timeseries(df_ts), use_container_width=True)
 
     # Tab 3: MEA power outage
     with tab3:

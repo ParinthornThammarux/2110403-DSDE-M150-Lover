@@ -483,11 +483,11 @@ import plotly.graph_objects as go
 
 def plot_complaint_timeseries(df: pd.DataFrame) -> go.Figure:
     """
-    Time series of complaints per day by province.
+    Time series of complaints per day by district.
 
     Explanation:
     - Convert timestamp/date to proper datetime
-    - Group by date and province (if available)
+    - Group by date and district (if available)
     - Plot number of complaints per day
     """
     # If no data after filtering, return an empty figure with message
@@ -518,15 +518,15 @@ def plot_complaint_timeseries(df: pd.DataFrame) -> go.Figure:
     df_local = df_local.dropna(subset=["date"])
 
     # ----------------------------------------------------
-    # 2) Group by date and province (if exists)
+    # 2) Group by date and district (if exists)
     # ----------------------------------------------------
-    if "province" in df_local.columns:
+    if "district" in df_local.columns:
         grouped = (
-            df_local.groupby(["date", "province"])
+            df_local.groupby(["date", "district"])
                     .size()
                     .reset_index(name="count")
         )
-        color_col = "province"
+        color_col = "district"
     else:
         grouped = (
             df_local.groupby(["date"])
@@ -536,7 +536,7 @@ def plot_complaint_timeseries(df: pd.DataFrame) -> go.Figure:
         color_col = None
 
     # ----------------------------------------------------
-    # 3) Plot line chart (with or without province color)
+    # 3) Plot line chart (with or without district color)
     # ----------------------------------------------------
     if grouped.empty:
         fig = go.Figure()
@@ -553,7 +553,7 @@ def plot_complaint_timeseries(df: pd.DataFrame) -> go.Figure:
             y="count",
             color=color_col,
             markers=True,
-            title="Daily complaints by province",
+            title="Daily complaints by district",
         )
     else:
         fig = px.line(
