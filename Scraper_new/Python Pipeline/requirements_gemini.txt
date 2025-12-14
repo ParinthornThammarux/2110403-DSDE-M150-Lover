@@ -5,7 +5,3 @@ openmeteo-requests
 requests-cache
 retry-requests
 google-genai
-# Optional: For Thai-specific NER with WangchanBERTa
-# transformers
-# torch
-# pythainlp

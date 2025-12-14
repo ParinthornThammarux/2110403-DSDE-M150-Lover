@@ -1,3 +1,4 @@
+# This pipeline is slow as heck even on a 4070 use the Gemini Api version instead
 import pandas as pd
 import instructor
 from openai import OpenAI
@@ -12,18 +13,10 @@ import datetime
 # ==========================================
 # 1. CONFIGURATION
 # ==========================================
-# Ollama runs locally on port 11434 by default
 OLLAMA_BASE_URL = "http://localhost:11434/v1"
 LOCAL_MODEL = "ministral-3:3b"  # Using 3B for 8GB VRAM (laptop GPU)
-# Other good options:
-# - "qwen2.5-coder:3b" (faster, less RAM)
-# - "ministral-3b" (very fast, small)
-# - "deepseek-r1:7b" (good reasoning)
-# - "phi4:14b" (best quality, needs more RAM)
 
-# Optional: Use WangchanBERTa for Thai NER (set to False to disable)
-USE_WANGCHANBERTA_NER = False  # Set to True after installing transformers, torch, pythainlp
-
+#Change this to your path
 INPUT_FILE = r"C:\Users\paeki\OneDrive\Desktop\pun\2110403-DSDE-M150-Lover\Scraper_new\Python Pipeline\MEA scraped\mea_power_outages_page_001.csv"
 OUTPUT_FILE = "mea_power_outages_page_001.csv"
 
@@ -217,30 +210,6 @@ DISTRICT_COORDS = {
     "default": (13.75, 100.50)  # Central Bangkok fallback
 }
 
-def extract_locations_with_wangchanberta(text):
-    """
-    Optional: Use WangchanBERTa for Thai-specific Named Entity Recognition.
-    Returns list of location entities found in text.
-    """
-    if not USE_WANGCHANBERTA_NER:
-        return []
-
-    try:
-        from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
-
-        # Load WangchanBERTa NER model (cached after first load)
-        tokenizer = AutoTokenizer.from_pretrained("airesearch/wangchanberta-base-att-spm-uncased")
-        model = AutoModelForTokenClassification.from_pretrained("airesearch/wangchanberta-base-att-spm-uncased")
-        nlp = pipeline("ner", model=model, tokenizer=tokenizer)
-
-        # Extract entities
-        entities = nlp(text)
-        locations = [ent['word'] for ent in entities if ent['entity'].startswith('B-LOC') or ent['entity'].startswith('I-LOC')]
-        return locations
-    except Exception as e:
-        print(f"    ⚠️  WangchanBERTa NER failed: {e}")
-        return []
-
 def infer_district_from_location(location_text, extracted_district):
     """
     Infer district from location details like street names or areas.
@@ -249,23 +218,14 @@ def infer_district_from_location(location_text, extracted_district):
     if not location_text or pd.isna(location_text):
         location_text = ""
 
-    # Optional: First try WangchanBERTa NER for location extraction
-    if USE_WANGCHANBERTA_NER:
-        ner_locations = extract_locations_with_wangchanberta(location_text)
-        for loc in ner_locations:
-            # Check if NER found a known district
-            if loc in DISTRICT_COORDS:
-                print(f"    🤖 WangchanBERTa found district: '{loc}'")
-                return loc
-
-    # Second, try to find area/street keywords in the location text (case-insensitive)
+    # Try to find area/street keywords in the location text (case-insensitive)
     location_lower = location_text.lower()
     for area_keyword, district in AREA_TO_DISTRICT.items():
         if area_keyword.lower() in location_lower:
             print(f"    🔍 Inferred '{district}' from area keyword '{area_keyword}' in location")
             return district
 
-    # Third, use the LLM-extracted district if available and map to Thai if English
+    # Use the LLM-extracted district if available and map to Thai if English
     if extracted_district and not pd.isna(extracted_district) and extracted_district != "Unknown":
         # Try to map English district name to Thai
         if extracted_district in AREA_TO_DISTRICT:

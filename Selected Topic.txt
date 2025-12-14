@@ -1,4 +1,4 @@
-2. Urban Issue Forecasting System with Multi-Source Integration
+Topic : Urban Issue Forecasting System with Multi-Source Integration
 AI/ML: Time-series forecasting model (LSTM/Prophet) to predict complaint volumes by category and location. Anomaly detection for unusual complaint patterns.
 Data Engineering: Apache Spark for processing 100k+ records → Delta Lake for versioned storage → dbt for data transformations → scheduled Airflow DAGs
 Visualization: Interactive geospatial dashboard (Plotly/Folium) with time-slider showing complaint evolution + graph network of related complaint types

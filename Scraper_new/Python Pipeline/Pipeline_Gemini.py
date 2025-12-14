@@ -15,17 +15,11 @@ import time
 # 1. CONFIGURATION
 # ==========================================
 # Gemini API Configuration
-GEMINI_API_KEY = "AIzaSyDSRDdWak3J3akfkvFC-snEuoQUqTLiiJ8"  # Set this as environment variable
+GEMINI_API_KEY = "GEMINI_ENVIRONMENT_KEY_HERE"
 if not GEMINI_API_KEY:
     raise ValueError("Please set GEMINI_API_KEY environment variable. Get your key from: https://aistudio.google.com/apikey")
 
-GEMINI_MODEL = "gemini-2.5-flash-lite"  # Fast and free tier available
-# Other options:
-# - "gemini-1.5-flash" (stable, fast)
-# - "gemini-1.5-pro" (more capable, slower)
-
-# Optional: Use WangchanBERTa for Thai NER (set to False to disable)
-USE_WANGCHANBERTA_NER = False  # Set to True after installing transformers, torch, pythainlp
+GEMINI_MODEL = "gemini-2.5-flash-lite"  # balanced option
 
 INPUT_FILE = r"D:\Chula Year2\DSDE Proj2\2110403-DSDE-M150-Lover\Scraper_new\MEA Scraper\data\external\scraped\mea_power_outages_page_013.csv"
 OUTPUT_FILE = "mea_power_outages_page_013_gemini.csv"
