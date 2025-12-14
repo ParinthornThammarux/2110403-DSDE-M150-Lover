@@ -16,8 +16,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Get project root directory (parent of visualization folder)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Get visualization directory (where models are stored)
+VIZ_ROOT = Path(__file__).resolve().parent
 
 
 class MLModelIntegrator:
@@ -40,11 +40,11 @@ class MLModelIntegrator:
         ใช้ทำนายจำนวน complaint ในอนาคต
         """
         if model_path is None:
-            model_path = PROJECT_ROOT / 'ml_models' / 'forecasting' / 'models' / 'rf_forecaster.pkl'
+            model_path = VIZ_ROOT / 'models' / 'forecasting' / 'rf_forecaster.pkl'
         else:
             model_path = Path(model_path)
             if not model_path.is_absolute():
-                model_path = PROJECT_ROOT / model_path
+                model_path = VIZ_ROOT / model_path
 
         try:
             if model_path.exists():
@@ -82,11 +82,11 @@ class MLModelIntegrator:
         ใช้หา complaint ที่มีพฤติกรรมผิดปกติ
         """
         if model_path is None:
-            model_path = PROJECT_ROOT / 'ml_models' / 'anomaly_detection' / 'models' / 'anomaly_if_model.pkl'
+            model_path = VIZ_ROOT / 'models' / 'anamaly_detection' / 'anomaly_if_model.pkl'
         else:
             model_path = Path(model_path)
             if not model_path.is_absolute():
-                model_path = PROJECT_ROOT / model_path
+                model_path = VIZ_ROOT / model_path
 
         try:
             if model_path.exists():
@@ -108,11 +108,11 @@ class MLModelIntegrator:
         ใช้วิเคราะห์รูปแบบการเกิดไฟดับ
         """
         if model_path is None:
-            model_path = PROJECT_ROOT / 'ml_models' / 'outage_model' / 'models' / 'outage_kmeans_model.pkl'
+            model_path = VIZ_ROOT / 'models' / 'outage' / 'outage_kmeans_model.pkl'
         else:
             model_path = Path(model_path)
             if not model_path.is_absolute():
-                model_path = PROJECT_ROOT / model_path
+                model_path = VIZ_ROOT / model_path
 
         try:
             if model_path.exists():

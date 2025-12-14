@@ -57,10 +57,357 @@ from outage_viz import (
 # Page configuration
 st.set_page_config(
     page_title="Urban Issue Dashboard - Bangkok",
-    page_icon="",
+    page_icon="🏙️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Translation dictionary
+TRANSLATIONS = {
+    'en': {
+        # Headers
+        'main_header': 'Urban Issue Forecasting Dashboard',
+        'sub_header': 'Bangkok Traffy Data Analysis & Prediction System',
+        'loading_data': 'Loading data and ML models...',
+
+        # Sidebar
+        'filters': 'Filters',
+        'select_date_range': 'Select Date Range',
+        'select_district': 'Select District',
+        'select_complaint_type': 'Select Complaint Type',
+        'all': 'All',
+        'language': 'Language',
+        'sampled_records': 'Sampled {count:,} records',
+        'loaded_data': 'Loaded data: {count:,} rows',
+
+        # Key Metrics
+        'key_metrics': 'Key Metrics',
+        'total_complaints': 'Total Complaints',
+        'avg_resolution_time': 'Avg Resolution Time',
+        'completion_rate': 'Completion Rate',
+        'num_districts': 'Number of Districts',
+        'complaint_types': 'Complaint Types',
+        'days': 'days',
+
+        # Tabs
+        'tab_geospatial': 'Geospatial Map',
+        'tab_district_analysis': 'District and Type Analysis',
+        'tab_mea_outage': 'MEA Power Outage',
+        'tab_forecasting': 'ML: Predictive Forecasting',
+        'tab_anomaly': 'ML: Anomaly Detection',
+        'tab_clustering': 'ML: Power Outage Clustering',
+        'tab_additional': 'Additional Analysis',
+
+        # Tab 1: Geospatial
+        'geospatial_analysis': 'Geospatial Analysis',
+        'geospatial_desc': '<b>Description:</b> Map showing the distribution of complaints in Bangkok<br>- <b>Heat Map:</b> Shows density of issues in each area<br>- <b>Marker Clusters:</b> Shows details of each complaint',
+        'traffy_complaint_map': 'Traffy Complaint Map',
+        'choose_map_type': 'Choose map type',
+        'heat_map': 'Heat Map (Density)',
+        'marker_clusters': 'Marker Clusters (Individual Points)',
+        'grid_layer': 'Grid Layer (3D Grid Visualization)',
+        'loading_map': 'Loading map...',
+        'district_statistics': 'District Statistics',
+        'number_of_complaints': 'Number of Complaints',
+        'avg_resolution_time_days': 'Average Resolution Time (days)',
+
+        # Tab 2: District Analysis
+        'district_type_analysis': 'District and Type Analysis',
+        'top_districts_title': 'Top Districts by Number of Complaints',
+        'top_districts_desc': '<b>Description:</b> Ranks districts with the highest number of complaints to identify areas requiring special attention',
+        'num_districts_to_show': 'Number of districts to display',
+        'complaints_by_district': 'Complaints by District',
+        'complaints_by_district_desc': '<b>Description:</b> Shows the distribution of each complaint type in each district to understand what types of issues occur in each area',
+        'filter_by_type': 'Filter by Complaint Type',
+        'top_complaint_types': 'Top Complaint Types',
+        'complaint_distribution': 'Complaint Distribution Across Districts',
+        'complaint_distribution_desc': '<b>Description:</b> Shows which districts each complaint type occurs in to identify distribution patterns of each issue type',
+        'filter_by_district': 'Filter by District',
+
+        # Tab 3: MEA Outage
+        'outage_slots_viz': '⚡ Outage Slots Visualization',
+        'outage_desc': '<b>Description:</b> This tab displays power outage time slot data showing total outage duration in each district and timeline of outage periods each day',
+        'total_outage_duration': 'Total outage duration by district',
+        'outage_not_available': 'MEA outage data not available. Add clean_scraping_data.csv to data/',
+
+        # Tab 4: Forecasting
+        'predictive_modeling': 'Predictive Modeling: Number of Complaints',
+        'forecasting_desc': '<b>Description:</b> Uses RandomForest model to forecast number of complaints<br>- <b>Blue line:</b> Actual data<br>- <b>Red line:</b> Predicted values (both past and future - compare accuracy and see future)<br>- <b>Gray area:</b> Confidence interval for future predictions<br>- <b>Gray dashed line:</b> Divides past and future (today)',
+        'num_days_predict': 'Number of days to predict',
+        'run_forecast': 'Run forecast / Update prediction',
+        'no_data_forecast': 'No data available for forecasting with the current filters.',
+        'loading_forecast': 'Loading forecast data...',
+        'mean_predicted': 'mean predicted',
+        'max_predicted': 'max predicted',
+        'min_predicted': 'min predicted',
+        'complaints_per_day': 'complaints/day',
+        'see_forecast_data': 'see forecast data table',
+        'please_run_forecast': "Please 'Run forecast / Update prediction'",
+        'display_last_run': 'Display last run (days_ahead = {days} days)',
+        'date': 'Date',
+        'predicted': 'Predicted',
+        'lower_bound': 'Lower Bound',
+        'upper_bound': 'Upper Bound',
+
+        # Tab 5: Anomaly Detection
+        'anomaly_detection': 'Anomaly Detection with Machine Learning',
+        'anomaly_desc': '<b>Description:</b> Uses Isolation Forest model to detect complaints with abnormal behavior<br><b>Data Source:</b> Real data from clean_data.csv<br><b>Model:</b> IsolationForest<br>High Anomaly Score = Highly abnormal (e.g., unusually long resolution time, or occurring in abnormal location/time)',
+        'settings_for_sampling': 'settings for data sampling',
+        'sample_percentage': 'Percentage of data to sample for anomaly detection',
+        'reduce_data_help': 'Reduce data size to decrease processing time',
+        'using_real_data': 'Using real data {count:,} records from clean_data.csv',
+        'loading_anomaly': 'Loading anomaly detection model...',
+        'preparing_features': 'Preparing features...',
+        'processing_isolation': 'Processing with Isolation Forest model...',
+        'completed': 'Completed!',
+        'error_anomaly': 'Error during anomaly detection: {error}',
+        'num_anomalies': 'Number of Anomalies Detected',
+        'anomaly_rate': 'Anomaly Rate',
+        'avg_anomaly_score': 'Average Anomaly Score',
+        'data_source': 'Data Source',
+        'actual_data': 'Actual data from clean_data.csv ({count:,} records)',
+        'anomaly_timeline': 'Anomaly Detection Timeline',
+        'anomaly_distribution_title': 'Anomaly Distribution by Type and District',
+        'detected_anomalies': 'Detected Anomalies (Top 50)',
+        'district': 'District',
+        'type': 'Type',
+        'resolution_days': 'Resolution Time (days)',
+        'anomaly_score': 'Anomaly Score',
+        'no_anomalies': 'No anomalies found in selected data',
+
+        # Tab 6: Clustering
+        'clustering_title': 'K-Means Clustering: Power Outage Event Grouping',
+        'clustering_desc': '<b>Description:</b> Uses K-Means model to group power outage events by similar behavior<br><b>Data Source:</b> MEA<br><b>Model:</b> K-Means Clustering<br><b>Features:</b> Day of week, district, temperature, rainfall, wind speed, start time, duration',
+        'clustering_warning': 'WARNING: K-Means Clustering model is not available',
+        'train_model_info': 'Please train the model by running: `ml_models/outage_model/train_outage_model.py`',
+        'cluster_file_not_found': 'Cluster data file not found: {path}',
+        'train_first': 'Please train the model first to generate the cluster data file',
+        'loading_cluster': 'Loading cluster data...',
+        'loaded_successfully': 'Loaded data successfully: {count:,} power outage events',
+        'summary_statistics': 'Summary Statistics',
+        'num_clusters': 'Number of Clusters',
+        'avg_duration': 'Average Duration',
+        'minutes': 'minutes',
+        'total_outages': 'Total Outages',
+        'cluster_distribution': 'Distribution of Outages by Cluster',
+        'cluster_characteristics': 'Average Characteristics of Each Cluster',
+        'time_patterns': 'Time Patterns of Power Outages by Cluster',
+        'geographic_distribution': 'Geographic Distribution',
+        'distribution_by_day': 'Distribution by Day of Week',
+        'weather_correlation': 'Weather Correlation with Clusters',
+        'detailed_cluster': 'Detailed Cluster Analysis',
+        'select_cluster': 'Select a cluster to view details',
+        'cluster': 'Cluster {num}',
+        'view_sample_data': 'View sample data of the selected cluster',
+
+        # Tab 7: Additional
+        'additional_analysis': 'Additional Analysis',
+        'time_patterns_title': 'Time Patterns',
+        'hourly_pattern': 'Hourly Pattern',
+        'weekday_pattern': 'Weekday Pattern',
+        'compare_trends': 'Compare Trends by District',
+        'compare_trends_desc': '<b>Description:</b> Compare complaint trends of multiple districts over time',
+        'select_districts_compare': 'Select districts to compare',
+        'summary_stats': 'Summary Statistics',
+        'top_5_districts': 'Top 5 Districts with Most Complaints',
+        'top_5_types': 'Top 5 Complaint Types',
+        'resolution_stats': 'Resolution Time Statistics',
+        'average': 'Average',
+        'median': 'Median',
+        'maximum': 'Maximum',
+        'minimum': 'Minimum',
+
+        # Footer
+        'footer_title': 'Urban Issue Forecasting System',
+        'footer_team': 'DSDE M150-Lover Team | Chulalongkorn University',
+        'data_source': 'Data Source',
+        'data_rows': 'Data Rows',
+        'ml_models': 'ML Models',
+        'last_updated': 'Last Updated',
+
+        # Map popup
+        'popup_district': 'District',
+        'popup_type': 'Type',
+        'popup_date': 'Date',
+        'popup_status': 'Status',
+        'popup_resolution': 'Resolution Time',
+    },
+    'th': {
+        # Headers
+        'main_header': 'ระบบวิเคราะห์และพยากรณ์ปัญหาในเขตกรุงเทพมหานคร',
+        'sub_header': 'ระบบวิเคราะห์และพยากรณ์ปัญหาเขตกรุงเทพมหานคร | Bangkok Traffy Data Analysis',
+        'loading_data': 'กำลังโหลดข้อมูลและ ML models...',
+
+        # Sidebar
+        'filters': 'ตัวกรอง',
+        'select_date_range': 'เลือกช่วงเวลา',
+        'select_district': 'เลือกเขต',
+        'select_complaint_type': 'เลือกประเภท Complaint',
+        'all': 'ทั้งหมด',
+        'language': 'ภาษา',
+        'sampled_records': 'สุ่มตัวอย่าง {count:,} รายการ',
+        'loaded_data': 'โหลดข้อมูล: {count:,} แถว',
+
+        # Key Metrics
+        'key_metrics': 'ตัวชี้วัดหลัก (Key Metrics)',
+        'total_complaints': 'จำนวน Complaint ทั้งหมด',
+        'avg_resolution_time': 'เวลาแก้ปัญหาเฉลี่ย',
+        'completion_rate': 'อัตราการแก้ไขเสร็จสิ้น',
+        'num_districts': 'จำนวนเขต',
+        'complaint_types': 'ประเภทปัญหา',
+        'days': 'วัน',
+
+        # Tabs
+        'tab_geospatial': 'แผนที่ภูมิศาสตร์',
+        'tab_district_analysis': 'การวิเคราะห์ตามเขตและประเภท',
+        'tab_mea_outage': 'ข้อมูลไฟดับ MEA',
+        'tab_forecasting': 'ML: พยากรณ์แนวโน้ม',
+        'tab_anomaly': 'ML: ตรวจจับความผิดปกติ',
+        'tab_clustering': 'ML: จัดกลุ่มเหตุการณ์ไฟดับ',
+        'tab_additional': 'การวิเคราะห์เพิ่มเติม',
+
+        # Tab 1: Geospatial
+        'geospatial_analysis': 'การวิเคราะห์เชิงพื้นที่',
+        'geospatial_desc': '<b>คำอธิบาย:</b> แผนที่แสดงการกระจายตัวของ complaint ในกรุงเทพมหานคร<br>- <b>Heat Map:</b> แสดงความหนาแน่นของปัญหาในแต่ละพื้นที่<br>- <b>Marker Clusters:</b> แสดงรายละเอียดของแต่ละ complaint',
+        'traffy_complaint_map': 'แผนที่ Traffy Complaint',
+        'choose_map_type': 'เลือกประเภทแผนที่',
+        'heat_map': 'Heat Map (ความหนาแน่น)',
+        'marker_clusters': 'Marker Clusters (จุดแต่ละรายการ)',
+        'grid_layer': 'Grid Layer (กราฟ 3D)',
+        'loading_map': 'กำลังโหลดแผนที่...',
+        'district_statistics': 'สถิติตามเขต',
+        'number_of_complaints': 'จำนวน Complaint',
+        'avg_resolution_time_days': 'เวลาแก้ปัญหาเฉลี่ย (วัน)',
+
+        # Tab 2: District Analysis
+        'district_type_analysis': 'การวิเคราะห์ตามเขตและประเภท',
+        'top_districts_title': 'เขตที่มี Complaint มากที่สุด',
+        'top_districts_desc': '<b>คำอธิบาย:</b> จัดอันดับเขตที่มีจำนวน complaint สูงสุด ช่วยระบุพื้นที่ที่ต้องให้ความสนใจเป็นพิเศษ',
+        'num_districts_to_show': 'จำนวนเขตที่ต้องการแสดง',
+        'complaints_by_district': 'Complaint แยกตามเขต',
+        'complaints_by_district_desc': '<b>คำอธิบาย:</b> แสดงการกระจายของ complaint แต่ละประเภทในแต่ละเขต ช่วยให้เห็นว่าแต่ละเขตมีปัญหาประเภทใดบ้าง',
+        'filter_by_type': 'กรองตามประเภท Complaint',
+        'top_complaint_types': 'ประเภท Complaint ที่พบมากที่สุด',
+        'complaint_distribution': 'การกระจายของ Complaint ในแต่ละเขต',
+        'complaint_distribution_desc': '<b>คำอธิบาย:</b> แสดงว่า complaint แต่ละประเภทเกิดขึ้นในเขตใดบ้าง ช่วยระบุรูปแบบการกระจายของปัญหาแต่ละประเภท',
+        'filter_by_district': 'กรองตามเขต',
+
+        # Tab 3: MEA Outage
+        'outage_slots_viz': '⚡ การแสดงผลช่วงเวลาไฟดับ',
+        'outage_desc': '<b>คำอธิบาย:</b> แท็บนี้แสดงข้อมูลช่วงเวลาไฟดับตามตัวอย่างข้อมูล โดยแสดงทั้งระยะเวลาไฟดับรวมในแต่ละเขต และไทม์ไลน์ของช่วงเวลาที่ไฟดับในแต่ละวัน',
+        'total_outage_duration': 'ระยะเวลาไฟดับรวมในแต่ละเขต',
+        'outage_not_available': 'ไม่มีข้อมูลไฟดับ MEA กรุณาเพิ่มไฟล์ clean_scraping_data.csv ใน data/',
+
+        # Tab 4: Forecasting
+        'predictive_modeling': 'การพยากรณ์: จำนวน Complaint',
+        'forecasting_desc': '<b>คำอธิบาย:</b> ใช้โมเดล RandomForest ในการพยากรณ์จำนวน complaint<br>- <b>เส้นสีน้ำเงิน:</b> ข้อมูลจริง<br>- <b>เส้นสีแดง:</b> ค่าพยากรณ์ (ทั้งอดีตและอนาคต - เปรียบเทียบความแม่นยำและดูอนาคต)<br>- <b>พื้นที่สีเทา:</b> ช่วงความเชื่อมั่นสำหรับอนาคต (Confidence Interval)<br>- <b>เส้นประสีเทา:</b> แบ่งระหว่างอดีตและอนาคต (วันนี้)',
+        'num_days_predict': 'จำนวนวันที่ต้องการพยากรณ์',
+        'run_forecast': 'พยากรณ์ / อัพเดทการพยากรณ์',
+        'no_data_forecast': 'ไม่มีข้อมูลสำหรับการพยากรณ์ตามตัวกรองปัจจุบัน',
+        'loading_forecast': 'กำลังโหลดข้อมูลการพยากรณ์...',
+        'mean_predicted': 'ค่าเฉลี่ยที่พยากรณ์',
+        'max_predicted': 'ค่าสูงสุดที่พยากรณ์',
+        'min_predicted': 'ค่าต่ำสุดที่พยากรณ์',
+        'complaints_per_day': 'complaints/วัน',
+        'see_forecast_data': 'ดูตารางข้อมูลการพยากรณ์',
+        'please_run_forecast': 'กรุณากด "พยากรณ์ / อัพเดทการพยากรณ์"',
+        'display_last_run': 'แสดงผลการพยากรณ์ครั้งล่าสุด (days_ahead = {days} วัน)',
+        'date': 'วันที่',
+        'predicted': 'ค่าพยากรณ์',
+        'lower_bound': 'ขอบล่าง',
+        'upper_bound': 'ขอบบน',
+
+        # Tab 5: Anomaly Detection
+        'anomaly_detection': 'การตรวจจับความผิดปกติด้วย Machine Learning',
+        'anomaly_desc': '<b>คำอธิบาย:</b> ใช้โมเดล Isolation Forest ในการตรวจจับ complaint ที่มีพฤติกรรมผิดปกติ<br><b>ข้อมูลที่ใช้:</b> ข้อมูลจริงจาก clean_data.csv<br><b>โมเดล:</b> IsolationForest <br>Anomaly Score สูง = ผิดปกติมาก (เช่น ใช้เวลาแก้ไขนานผิดปกติ หรือเกิดในพื้นที่/เวลาที่ผิดปกติ)',
+        'settings_for_sampling': 'ตั้งค่าการสุ่มตัวอย่างข้อมูล',
+        'sample_percentage': 'เปอร์เซ็นต์ข้อมูลที่ใช้ในการตรวจจับความผิดปกติ',
+        'reduce_data_help': 'ลดขนาดข้อมูลเพื่อลดเวลาในการประมวลผล',
+        'using_real_data': 'ใช้ข้อมูลจริง {count:,} รายการ จาก clean_data.csv',
+        'loading_anomaly': 'กำลังโหลดโมเดลตรวจจับความผิดปกติ...',
+        'preparing_features': 'กำลังเตรียม features...',
+        'processing_isolation': 'กำลังประมวลผลด้วยโมเดล Isolation Forest...',
+        'completed': 'เสร็จสิ้น!',
+        'error_anomaly': 'เกิดข้อผิดพลาดในการตรวจจับความผิดปกติ: {error}',
+        'num_anomalies': 'จำนวนความผิดปกติที่ตรวจพบ',
+        'anomaly_rate': 'อัตราความผิดปกติ',
+        'avg_anomaly_score': 'คะแนนความผิดปกติเฉลี่ย',
+        'data_source': 'แหล่งข้อมูล',
+        'actual_data': 'ข้อมูลจริงจาก clean_data.csv ({count:,} รายการ)',
+        'anomaly_timeline': 'ไทม์ไลน์การตรวจจับความผิดปกติ',
+        'anomaly_distribution_title': 'การกระจายความผิดปกติตามประเภทและเขต',
+        'detected_anomalies': 'ความผิดปกติที่ตรวจพบ (50 อันดับแรก)',
+        'district': 'เขต',
+        'type': 'ประเภท',
+        'resolution_days': 'ระยะเวลาแก้ (วัน)',
+        'anomaly_score': 'คะแนนความผิดปกติ',
+        'no_anomalies': 'ไม่พบความผิดปกติในข้อมูลที่เลือก',
+
+        # Tab 6: Clustering
+        'clustering_title': 'K-Means Clustering: การจัดกลุ่มเหตุการณ์ไฟดับ',
+        'clustering_desc': '<b>คำอธิบาย:</b> ใช้โมเดล K-Means ในการจัดกลุ่มเหตุการณ์ไฟดับตามพฤติกรรมที่คล้ายกัน<br><b>ข้อมูลที่ใช้:</b> MEA <br><b>Model:</b> K-Means Clustering <br><b>Features:</b> วันในสัปดาห์, เขต, อุณหภูมิ, ปริมาณฝน, ความเร็วลม, เวลาเริ่ม, ระยะเวลา',
+        'clustering_warning': 'คำเตือน: โมเดล K-Means Clustering ไม่พร้อมใช้งาน',
+        'train_model_info': 'กรุณาเทรนโมเดลโดยรัน: `ml_models/outage_model/train_outage_model.py`',
+        'cluster_file_not_found': 'ไม่พบไฟล์ข้อมูล cluster: {path}',
+        'train_first': 'กรุณาเทรนโมเดลก่อนเพื่อสร้างไฟล์ข้อมูล cluster',
+        'loading_cluster': 'กำลังโหลดข้อมูล cluster...',
+        'loaded_successfully': 'โหลดข้อมูลสำเร็จ: {count:,} เหตุการณ์ไฟดับ',
+        'summary_statistics': 'สถิติสรุป',
+        'num_clusters': 'จำนวน Cluster',
+        'avg_duration': 'ระยะเวลาเฉลี่ย',
+        'minutes': 'นาที',
+        'total_outages': 'จำนวนไฟดับทั้งหมด',
+        'cluster_distribution': 'การกระจายของไฟดับในแต่ละ Cluster',
+        'cluster_characteristics': 'ลักษณะเฉลี่ยของแต่ละ Cluster',
+        'time_patterns': 'รูปแบบเวลาของไฟดับในแต่ละ Cluster',
+        'geographic_distribution': 'การกระจายตามพื้นที่',
+        'distribution_by_day': 'การกระจายตามวันในสัปดาห์',
+        'weather_correlation': 'ความสัมพันธ์กับสภาพอากาศ',
+        'detailed_cluster': 'การวิเคราะห์ Cluster แบบละเอียด',
+        'select_cluster': 'เลือก cluster เพื่อดูรายละเอียด',
+        'cluster': 'Cluster {num}',
+        'view_sample_data': 'ดูตัวอย่างข้อมูลของ cluster ที่เลือก',
+
+        # Tab 7: Additional
+        'additional_analysis': 'การวิเคราะห์เพิ่มเติม',
+        'time_patterns_title': 'รูปแบบตามเวลา',
+        'hourly_pattern': 'รูปแบบตามช่วงเวลาในวัน',
+        'weekday_pattern': 'รูปแบบตามวันในสัปดาห์',
+        'compare_trends': 'เปรียบเทียบแนวโน้มแต่ละเขต',
+        'compare_trends_desc': '<b>คำอธิบาย:</b> เปรียบเทียบแนวโน้มจำนวน complaint ของหลายเขตตามเวลา',
+        'select_districts_compare': 'เลือกเขตที่ต้องการเปรียบเทียบ',
+        'summary_stats': 'สถิติสรุป',
+        'top_5_districts': 'Top 5 เขตที่มี Complaint มากที่สุด',
+        'top_5_types': 'Top 5 ประเภท Complaint',
+        'resolution_stats': 'สถิติเวลาแก้ปัญหา',
+        'average': 'เฉลี่ย',
+        'median': 'มัธยฐาน',
+        'maximum': 'สูงสุด',
+        'minimum': 'ต่ำสุด',
+
+        # Footer
+        'footer_title': 'ระบบวิเคราะห์และพยากรณ์ปัญหาในเขตกรุงเทพมหานคร',
+        'footer_team': 'ทีม DSDE M150-Lover | จุฬาลงกรณ์มหาวิทยาลัย',
+        'data_source': 'แหล่งข้อมูล',
+        'data_rows': 'จำนวนแถวข้อมูล',
+        'ml_models': 'โมเดล ML',
+        'last_updated': 'อัพเดทล่าสุด',
+
+        # Map popup
+        'popup_district': 'เขต',
+        'popup_type': 'ประเภท',
+        'popup_date': 'วันที่',
+        'popup_status': 'สถานะ',
+        'popup_resolution': 'ระยะเวลาแก้',
+    }
+}
+
+def t(key, lang='en', **kwargs):
+    """Translation helper function"""
+    text = TRANSLATIONS.get(lang, TRANSLATIONS['en']).get(key, key)
+    if kwargs:
+        return text.format(**kwargs)
+    return text
 
 # Custom CSS
 st.markdown("""
@@ -108,15 +455,21 @@ def load_data():
     """
     Loading complaint data from clean_data.csv
     """
-    csv_path = Path("../data/clean_data_sampled.csv")
+    csv_path = Path("data/clean_data.csv")
 
     if not csv_path.exists():
-        st.error(f"File not found: {csv_path}")
-        st.info("Please place clean_data.csv in the root directory")
+        st.error(f"File not found: {csv_path.absolute()}")
+        st.info(f"Please place clean_data.csv at: {csv_path.absolute()}")
         st.stop()
 
     # Load CSV
     df = pd.read_csv(csv_path)
+
+    # SAMPLE DATA FOR DEPLOYMENT
+    SAMPLE_SIZE = 100000  # Change this number if it lags
+    if len(df) > SAMPLE_SIZE:
+        df = df.sample(n=SAMPLE_SIZE, random_state=42)
+        st.sidebar.info(f"Sampled {SAMPLE_SIZE:,} records")
 
     st.sidebar.info(f"Loaded data: {len(df):,} rows")
 
@@ -173,7 +526,7 @@ def load_mea_outage_data():
     """
     Loading MEA power outage data from clean_scraping_data.csv
     """
-    csv_path = Path("../data/clean_scraping_data.csv")
+    csv_path = Path("data/clean_scraping_data.csv")
 
     if not csv_path.exists():
         return None
@@ -304,40 +657,54 @@ def create_geospatial_map(df, map_type='heatmap'):
 def main():
     """Main dashboard application"""
 
+    # Initialize session state for language
+    if 'language' not in st.session_state:
+        st.session_state.language = 'en'
+
+    # Language toggle in sidebar (at the very top)
+    lang_options = {'English': 'en', 'ไทย': 'th'}
+    selected_lang_label = st.sidebar.selectbox(
+        "🌐 Language / ภาษา",
+        options=list(lang_options.keys()),
+        index=0 if st.session_state.language == 'en' else 1
+    )
+    st.session_state.language = lang_options[selected_lang_label]
+    lang = st.session_state.language
+
     # Header
-    st.markdown('<div class="main-header">Urban Issue Forecasting Dashboard</div>',
+    st.markdown(f'<div class="main-header">{t("main_header", lang)}</div>',
                unsafe_allow_html=True)
-    st.markdown('<div class="sub-header">ระบบวิเคราะห์และพยากรณ์ปัญหาเขตกรุงเทพมหานคร | Bangkok Traffy Data Analysis</div>',
+    st.markdown(f'<div class="sub-header">{t("sub_header", lang)}</div>',
                unsafe_allow_html=True)
     st.markdown("---")
 
     # Load data and models
-    with st.spinner("กำลังโหลดข้อมูลและ ML models..."):
+    with st.spinner(t("loading_data", lang)):
         df = load_data()
         df_mea_outage = load_mea_outage_data()
         ml_integrator = load_ml_models()
 
     # Sidebar filters
-    st.sidebar.header("Filters")
+    st.sidebar.header(t("filters", lang))
 
     # Date range filter
     min_date = df['timestamp'].min().date()
     max_date = df['timestamp'].max().date()
 
     date_range = st.sidebar.date_input(
-        "เลือกช่วงเวลา",
+        t("select_date_range", lang),
         value=(date(2024, 10    , 1), max_date),
         min_value=min_date,
         max_value=max_date
     )
 
     # District filter
-    districts = ['All'] + sorted(df['district'].dropna().unique().tolist())
-    selected_district = st.sidebar.selectbox("เลือกเขต", districts)
+    districts = [t("all", lang)] + sorted(df['district'].dropna().unique().tolist())
+    selected_district = st.sidebar.selectbox(t("select_district", lang), districts)
 
     # Complaint type filter
-    types = ['All'] + sorted(df['primary_type'].unique().tolist())
-    selected_type = st.sidebar.selectbox("เลือกประเภท Complaint", types)
+    types = [t("all", lang)] + sorted(df['primary_type'].unique().tolist())
+    selected_type = st.sidebar.selectbox(t("select_complaint_type", lang), types)
 
     # Apply filters
     df_filtered = df.copy()
@@ -347,49 +714,49 @@ def main():
             (df_filtered['timestamp'].dt.date <= date_range[1])
         ]
 
-    if selected_district != 'All':
+    if selected_district != t("all", lang):
         df_filtered = df_filtered[df_filtered['district'] == selected_district]
 
-    if selected_type != 'All':
+    if selected_type != t("all", lang):
         df_filtered = df_filtered[df_filtered['primary_type'] == selected_type]
 
     # Key Metrics
-    st.header("ตัวชี้วัดหลัก (Key Metrics)")
+    st.header(t("key_metrics", lang))
 
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         st.metric(
-            "จำนวน Complaint ทั้งหมด",
+            t("total_complaints", lang),
             f"{len(df_filtered):,}",
-            delta=f"{len(df_filtered) - len(df):.0f}" if selected_district != 'All' or selected_type != 'All' else None
+            delta=f"{len(df_filtered) - len(df):.0f}" if selected_district != t("all", lang) or selected_type != t("all", lang) else None
         )
 
     with col2:
         avg_resolution = df_filtered['solve_days'].mean()
         st.metric(
-            "เวลาแก้ปัญหาเฉลี่ย",
-            f"{avg_resolution:.1f} วัน"
+            t("avg_resolution_time", lang),
+            f"{avg_resolution:.1f} {t('days', lang)}"
         )
 
     with col3:
         completion_rate = (df_filtered['state'] == 'เสร็จสิ้น').mean() * 100
         st.metric(
-            "อัตราการแก้ไขเสร็จสิ้น",
+            t("completion_rate", lang),
             f"{completion_rate:.1f}%"
         )
 
     with col4:
         unique_districts = df_filtered['district'].nunique()
         st.metric(
-            "จำนวนเขต",
+            t("num_districts", lang),
             f"{unique_districts}"
         )
 
     with col5:
         unique_types = df_filtered['primary_type'].nunique()
         st.metric(
-            "ประเภทปัญหา",
+            t("complaint_types", lang),
             f"{unique_types}"
         )
 
@@ -397,37 +764,35 @@ def main():
 
     # Main tabs
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "Geospatial Map",
-        "District and Type Analysis",
-        "MEA power outage",
-        "ML: Predictive Forecasting",
-        "ML: Anomaly Detection",
-        "ML: Power Outage Clustering",
-        "Additional Analysis"
+        t("tab_geospatial", lang),
+        t("tab_district_analysis", lang),
+        t("tab_mea_outage", lang),
+        t("tab_forecasting", lang),
+        t("tab_anomaly", lang),
+        t("tab_clustering", lang),
+        t("tab_additional", lang)
     ])
 
     # Tab 1: Geospatial Analysis
     with tab1:
-        st.header("Geospatial Analysis")
+        st.header(t("geospatial_analysis", lang))
 
-        st.markdown("""
+        st.markdown(f"""
         <div class="info-box">
-        <b>คำอธิบาย:</b> แผนที่แสดงการกระจายตัวของ complaint ในกรุงเทพมหานคร<br>
-        - <b>Heat Map:</b> แสดงความหนาแน่นของปัญหาในแต่ละพื้นที่<br>
-        - <b>Marker Clusters:</b> แสดงรายละเอียดของแต่ละ complaint
+        {t("geospatial_desc", lang)}
         </div>
         """, unsafe_allow_html=True)
-        
-        st.subheader("Truffy Complaint Map")
+
+        st.subheader(t("traffy_complaint_map", lang))
         # Map visualization type
         map_type = st.radio(
-            "Choose map type",
+            t("choose_map_type", lang),
             ['heatmap', 'clusters', 'GridLayer'],
-            format_func=lambda x: 'Heat Map (ความหนาแน่น)' if x == 'heatmap' else 'Marker Clusters (จุดแต่ละรายการ)' if x == 'clusters' else 'Grid Layer (3D Grid Visualization)'
+            format_func=lambda x: t('heat_map', lang) if x == 'heatmap' else t('marker_clusters', lang) if x == 'clusters' else t('grid_layer', lang)
         )
         st.markdown("---")
 
-        with st.spinner("Loading map..."):
+        with st.spinner(t("loading_map", lang)):
             if map_type == 'GridLayer':
                 result = create_geospatial_map(df_filtered, map_type=map_type)
                 st.pydeck_chart(result)
@@ -436,77 +801,75 @@ def main():
                 folium_static(m, width=1400, height=600)
 
         # District statistics table
-        st.subheader("District Statistics")
+        st.subheader(t("district_statistics", lang))
         district_stats = df_filtered.groupby('district').agg({
             'lat': 'count',
             'solve_days': 'mean',
         }).round(2)
-        district_stats.columns = ['Number of Complaints', 'Average Resolution Time (days)']
-        district_stats = district_stats.sort_values('Number of Complaints', ascending=False)
+        district_stats.columns = [t("number_of_complaints", lang), t("avg_resolution_time_days", lang)]
+        district_stats = district_stats.sort_values(t("number_of_complaints", lang), ascending=False)
 
         st.dataframe(district_stats, use_container_width=True, height=400)
 
     # Tab 2: District and Type Analysis
     with tab2:
-        st.header("District and Type Analysis")
+        st.header(t("district_type_analysis", lang))
 
         # 1.) Top districts
-        st.subheader("Top Districts by Number of Complaints")
-        st.markdown("""
+        st.subheader(t("top_districts_title", lang))
+        st.markdown(f"""
         <div class="info-box">
-        <b>คำอธิบาย:</b> จัดอันดับเขตที่มีจำนวน complaint สูงสุด ช่วยระบุพื้นที่ที่ต้องให้ความสนใจเป็นพิเศษ
+        {t("top_districts_desc", lang)}
         </div>
         """, unsafe_allow_html=True)
 
-        top_n = st.slider("จำนวนเขตที่ต้องการแสดง", 5, 30, 15, key="top_districts")
-        st.subheader(f"Top {top_n} Districts by Number of Complaints")
+        top_n = st.slider(t("num_districts_to_show", lang), 5, 30, 15, key="top_districts")
+        st.subheader(f"Top {top_n} {t('top_districts_title', lang)}")
         st.plotly_chart(plot_top_complaint_districts(df_filtered, top_n), use_container_width=True)
         
         # 2.) Complaints by district
-        st.subheader("Complaints by District")
-        st.markdown("""
+        st.subheader(t("complaints_by_district", lang))
+        st.markdown(f"""
         <div class="info-box">
-        <b>คำอธิบาย:</b> แสดงการกระจายของ complaint แต่ละประเภทในแต่ละเขต
-        ช่วยให้เห็นว่าแต่ละเขตมีปัญหาประเภทใดบ้าง
+        {t("complaints_by_district_desc", lang)}
         </div>
         """, unsafe_allow_html=True)
 
         col_filter1, col_spacer1 = st.columns([2, 3])
         with col_filter1:
             complaint_filter_1 = st.selectbox(
-                "กรองตามประเภท Complaint",
-                ['All'] + sorted(df_filtered['primary_type'].unique().tolist()),
+                t("filter_by_type", lang),
+                [t("all", lang)] + sorted(df_filtered['primary_type'].unique().tolist()),
                 key="complaint_by_district"
             )
 
-        st.plotly_chart(plot_complaints_by_district(df_filtered, complaint_filter_1), use_container_width=True)
+        st.plotly_chart(plot_complaints_by_district(df_filtered, complaint_filter_1 if complaint_filter_1 != t("all", lang) else 'All'), use_container_width=True)
 
         st.markdown("---")
-        
-        
+
+
         # 3.) Additional visualizations
-        st.subheader("Top Complaint Types")
+        st.subheader(t("top_complaint_types", lang))
         st.plotly_chart(plot_top_complaint_types(df_filtered, top_n=15), use_container_width=True)
 
 
         # 4.) Complaint distribution across districts
-        st.subheader("Complaint Distribution Across Districts")
-        st.markdown("""
+        st.subheader(t("complaint_distribution", lang))
+        st.markdown(f"""
         <div class="info-box">
-        <b>คำอธิบาย:</b> แสดงว่า complaint แต่ละประเภทเกิดขึ้นในเขตใดบ้าง
-        ช่วยระบุรูปแบบการกระจายของปัญหาแต่ละประเภท
+        {t("complaint_distribution_desc", lang)}
         </div>
         """, unsafe_allow_html=True)
 
         col_filter2, col_spacer2 = st.columns([2, 3])
         with col_filter2:
             district_filter_1 = st.selectbox(
-                "กรองตามเขต",
-                ['All'] + sorted(df_filtered['district'].dropna().unique().tolist()),
+                t("filter_by_district", lang),
+                [t("all", lang)] + sorted(df_filtered['district'].dropna().unique().tolist()),
                 key="complaint_distribution"
             )
 
-        st.plotly_chart(plot_complaint_distribution_across_districts(df_filtered, district_filter_1), use_container_width=True)
+        st.plotly_chart(plot_complaint_distribution_across_districts(df_filtered, district_filter_1 if district_filter_1 != t("all", lang) else 'All'), use_container_width=True)
 
         #st.markdown("---")
 
@@ -578,42 +941,40 @@ def main():
 
     # Tab 3: MEA power outage
     with tab3:
-        st.header("⚡ Outage Slots Visualization")
+        st.header(t("outage_slots_viz", lang))
 
-        st.markdown("""
+        st.markdown(f"""
         <div class="info-box">
-        <b>คำอธิบาย:</b> แท็บนี้แสดงข้อมูลช่วงเวลาไฟดับตามตัวอย่างข้อมูล 
-        โดยแสดงทั้งระยะเวลาไฟดับรวมในแต่ละเขต และไทม์ไลน์ของช่วงเวลาที่ไฟดับในแต่ละวัน
+        {t("outage_desc", lang)}
         </div>
         """, unsafe_allow_html=True)
 
         df_outage = df_mea_outage
 
-        # Prepare dataframe (add start_dt, end_dt)
-        df_outage_prepared = prepare_outage_dataframe(df_outage)
+        if df_outage is not None:
+            # Prepare dataframe (add start_dt, end_dt)
+            df_outage_prepared = prepare_outage_dataframe(df_outage)
 
-        # Bar chart: total duration by district
-        st.subheader("Total outage duration by district")
-        st.plotly_chart(
-            plot_outage_duration_by_district(df_outage_prepared),
-            use_container_width=True
-        )
+            # Bar chart: total duration by district
+            st.subheader(t("total_outage_duration", lang))
+            st.plotly_chart(
+                plot_outage_duration_by_district(df_outage_prepared),
+                use_container_width=True
+            )
+        else:
+            st.warning(t("outage_not_available", lang))
 
     # Tab 4: Forecasting
     with tab4:
-        st.header("Predictive Modeling: Number of Complaints")
+        st.header(t("predictive_modeling", lang))
 
-        st.markdown("""
+        st.markdown(f"""
         <div class="info-box">
-        <b>คำอธิบาย:</b> ใช้โมเดล RandomForest ในการพยากรณ์จำนวน complaint<br>
-        - <b>เส้นสีน้ำเงิน:</b> ข้อมูลจริง<br>
-        - <b>เส้นสีแดง:</b> ค่าพยากรณ์ (ทั้งอดีตและอนาคต - เปรียบเทียบความแม่นยำและดูอนาคต)<br>
-        - <b>พื้นที่สีเทา:</b> ช่วงความเชื่อมั่นสำหรับอนาคต (Confidence Interval)<br>
-        - <b>เส้นประสีเทา:</b> แบ่งระหว่างอดีตและอนาคต (วันนี้)
+        {t("forecasting_desc", lang)}
         </div>
         """, unsafe_allow_html=True)
 
-        forecast_days = st.slider("Number of days to predict", 7, 60, 30)
+        forecast_days = st.slider(t("num_days_predict", lang), 7, 60, 30)
 
         # Prepare session_state for storing forecast results
         if "forecast_df" not in st.session_state:
@@ -622,12 +983,12 @@ def main():
             st.session_state["forecast_days_used"] = None
     
         # Click button to run forecast
-        run_forecast = st.button("Run forecast / Update prediction")
+        run_forecast = st.button(t("run_forecast", lang))
         if run_forecast:
             if df_filtered.empty:
-                st.warning("No data available for forecasting with the current filters.")
+                st.warning(t("no_data_forecast", lang))
             else:
-                with st.spinner("Loading forecast data..."):
+                with st.spinner(t("loading_forecast", lang)):
                     # Heavy computation: run ML model here only when button is pressed
                     forecast_df = ml_integrator.generate_forecast(
                         df_filtered,
@@ -642,8 +1003,7 @@ def main():
             forecast_df = st.session_state["forecast_df"]
 
             st.caption(
-                f"Display last run (days_ahead = "
-                f"{st.session_state['forecast_days_used']} days)"
+                t("display_last_run", lang, days=st.session_state['forecast_days_used'])
             )
 
             # Plot forecast visualization
@@ -661,47 +1021,44 @@ def main():
 
             with col1:
                 st.metric(
-                    "mean predicted",
-                    f"{forecast_df['predicted'].mean():.0f} complaints/day"
+                    t("mean_predicted", lang),
+                    f"{forecast_df['predicted'].mean():.0f} {t('complaints_per_day', lang)}"
                 )
 
             with col2:
                 st.metric(
-                    "max predicted",
-                    f"{forecast_df['predicted'].max():.0f} complaints/day"
+                    t("max_predicted", lang),
+                    f"{forecast_df['predicted'].max():.0f} {t('complaints_per_day', lang)}"
                 )
 
             with col3:
                 st.metric(
-                    "min predicted",
-                    f"{forecast_df['predicted'].min():.0f} complaints/day"
+                    t("min_predicted", lang),
+                    f"{forecast_df['predicted'].min():.0f} {t('complaints_per_day', lang)}"
                 )
 
             # Show forecast data
-            with st.expander("see forecast data table"):
+            with st.expander(t("see_forecast_data", lang)):
                 forecast_display = forecast_df.copy()
                 forecast_display['date'] = forecast_display['date'].dt.strftime('%Y-%m-%d')
-                forecast_display.columns = ['วันที่', 'ค่าพยากรณ์', 'ขอบล่าง', 'ขอบบน']
+                forecast_display.columns = [t('date', lang), t('predicted', lang), t('lower_bound', lang), t('upper_bound', lang)]
                 st.dataframe(forecast_display, use_container_width=True, height=400)
 
         else:
-            st.info("Please 'Run forecast / Update prediction'")
+            st.info(t("please_run_forecast", lang))
 
     # Tab 5: Anomaly Detection
     with tab5:
-        st.header("การตรวจจับความผิดปกติด้วย Machine Learning")
+        st.header(t("anomaly_detection", lang))
 
-        st.markdown("""
+        st.markdown(f"""
         <div class="info-box">
-        <b>คำอธิบาย:</b> ใช้โมเดล Isolation Forest ในการตรวจจับ complaint ที่มีพฤติกรรมผิดปกติ<br>
-        <b>ข้อมูลที่ใช้:</b> ข้อมูลจริงจาก clean_data.csv<br>
-        <b>โมเดล:</b> IsolationForest <br>
-        Anomaly Score สูง = ผิดปกติมาก (เช่น ใช้เวลาแก้ไขนานผิดปกติ หรือเกิดในพื้นที่/เวลาที่ผิดปกติ)
+        {t("anomaly_desc", lang)}
         </div>
         """, unsafe_allow_html=True)
 
         # Settings for data sampling
-        st.markdown("##### settings for data sampling")
+        st.markdown(f"##### {t('settings_for_sampling', lang)}")
 
         col_setting1, col_setting2 = st.columns([2, 3])
 
@@ -713,13 +1070,13 @@ def main():
             # Allow sampling if dataset is large
             if total_data > 50000:
                 sample_percentage = st.slider(
-                    "Percentage of data to sample for anomaly detection",
+                    t("sample_percentage", lang),
                     min_value=10,
                     max_value=100,
                     value=30,
                     step=10,
                     format="%d%%",
-                    help="ลดขนาดข้อมูลเพื่อลดเวลาในการประมวลผล",
+                    help=t("reduce_data_help", lang),
                 )
                 sample_size = int(total_data * sample_percentage / 100)
                 sample_size = max(5000, sample_size)
@@ -728,11 +1085,11 @@ def main():
                 sample_percentage = 100
 
         with col_setting2:
-            st.info(f"ใช้ข้อมูลจริง {len(df_for_anomaly):,} รายการ จาก clean_data.csv")
+            st.info(t("using_real_data", lang, count=len(df_for_anomaly)))
 
         # Detect anomalies
         st.markdown("---")
-        progress_text = "Loading anomaly detection model..."
+        progress_text = t("loading_anomaly", lang)
         progress_bar = st.progress(0, text=progress_text)
 
         @st.cache_data(ttl=3600, show_spinner=False)
@@ -740,19 +1097,19 @@ def main():
             return _ml_int.detect_anomalies(df_for_anomaly)
 
         try:
-            progress_bar.progress(30, text="Preparing features...")
+            progress_bar.progress(30, text=t("preparing_features", lang))
 
             # Create hash based on data
             data_hash = hash(str(len(df_for_anomaly)) + str(df_for_anomaly['timestamp'].min()) + str(df_for_anomaly['timestamp'].max()))
 
-            progress_bar.progress(70, text="Processing with Isolation Forest model...")
+            progress_bar.progress(70, text=t("processing_isolation", lang))
             df_with_anomalies = detect_anomalies_cached(ml_integrator, data_hash, len(df_for_anomaly))
 
-            progress_bar.progress(100, text="Completed!")
+            progress_bar.progress(100, text=t("completed", lang))
             progress_bar.empty()
         except Exception as e:
             progress_bar.empty()
-            st.error(f"Error during anomaly detection: {str(e)}")
+            st.error(t("error_anomaly", lang, error=str(e)))
             st.stop()
 
         # Anomaly statistics
@@ -763,13 +1120,13 @@ def main():
 
         with col1:
             st.metric(
-                "Number of Anomalies Detected",
+                t("num_anomalies", lang),
                 f"{total_anomalies:,}"
             )
 
         with col2:
             st.metric(
-                "Anomaly Rate",
+                t("anomaly_rate", lang),
                 f"{anomaly_rate:.2f}%"
             )
 
@@ -777,28 +1134,28 @@ def main():
             if total_anomalies > 0:
                 avg_anomaly_score = df_with_anomalies[df_with_anomalies['is_anomaly'] == 1]['anomaly_score'].mean()
                 st.metric(
-                    "Average Anomaly Score",
+                    t("avg_anomaly_score", lang),
                     f"{avg_anomaly_score:.2f}"
                 )
             else:
                 st.metric(
-                    "Average Anomaly Score",
+                    t("avg_anomaly_score", lang),
                     "N/A"
                 )
 
         # Data source info
-        st.info(f"**Data Source:** Actual data from clean_data.csv ({len(df_with_anomalies):,} records)")
+        st.info(f"**{t('data_source', lang)}:** {t('actual_data', lang, count=len(df_with_anomalies))}")
 
         # Anomaly scatter plot
-        st.subheader("Anomaly Detection Timeline")
+        st.subheader(t("anomaly_timeline", lang))
         st.plotly_chart(plot_anomaly_scatter(df_with_anomalies), use_container_width=True)
 
         # Anomaly distribution
-        st.subheader("Anomaly Distribution by Type and District")
+        st.subheader(t("anomaly_distribution_title", lang))
         st.plotly_chart(plot_anomaly_distribution(df_with_anomalies), use_container_width=True)
 
         # Anomaly table
-        st.subheader("Detected Anomalies (Top 50)")
+        st.subheader(t("detected_anomalies", lang))
         anomalies = df_with_anomalies[df_with_anomalies['is_anomaly'] == 1].copy()
 
         if len(anomalies) > 0:
@@ -806,74 +1163,71 @@ def main():
                 'anomaly_score', ascending=False
             ).head(50)
 
-            anomalies_display.columns = ['วันที่', 'เขต', 'ประเภท', 'ระยะเวลาแก้ (วัน)', 'Anomaly Score']
+            anomalies_display.columns = [t('date', lang), t('district', lang), t('type', lang), t('resolution_days', lang), t('anomaly_score', lang)]
             st.dataframe(anomalies_display, use_container_width=True, height=400)
         else:
-            st.info("ไม่พบความผิดปกติในข้อมูลที่เลือก")
+            st.info(t("no_anomalies", lang))
 
     # Tab 6: Outage Clustering
     with tab6:
-        st.header("K-Means Clustering: การจัดกลุ่มเหตุการณ์ไฟดับ")
+        st.header(t("clustering_title", lang))
 
-        st.markdown("""
+        st.markdown(f"""
         <div class="info-box">
-        <b>คำอธิบาย:</b> ใช้โมเดล K-Means ในการจัดกลุ่มเหตุการณ์ไฟดับตามพฤติกรรมที่คล้ายกัน<br>
-        <b>ข้อมูลที่ใช้:</b> MEA <br>
-        <b>Model:</b> K-Means Clustering <br>
-        <b>Features:</b> วันในสัปดาห์, เขต, อุณหภูมิ, ปริมาณฝน, ความเร็วลม, เวลาเริ่ม, ระยะเวลา
+        {t("clustering_desc", lang)}
         </div>
         """, unsafe_allow_html=True)
 
         if ml_integrator.outage_model is None:
-            st.warning("WARNING: K-Means Clustering model is not available")
-            st.info("Please train the model by running: `ml_models/outage_model/train_outage_model.py`")
+            st.warning(t("clustering_warning", lang))
+            st.info(t("train_model_info", lang))
         else:
             # Load outage data with clusters
-            outage_data_path = Path("../ml_models/outage_model/models/power_outage_with_clusters.csv")
+            outage_data_path = Path("data/power_outage_with_clusters.csv")
 
             if not outage_data_path.exists():
-                st.error(f"Cluster data file not found: {outage_data_path}")
-                st.info("Please train the model first to generate the cluster data file")
+                st.error(t("cluster_file_not_found", lang, path=outage_data_path))
+                st.info(t("train_first", lang))
             else:
-                with st.spinner("Loading cluster data..."):
+                with st.spinner(t("loading_cluster", lang)):
                     df_outage = pd.read_csv(outage_data_path)
 
-                st.success(f"Loaded data successfully: {len(df_outage):,} power outage events")
+                st.success(t("loaded_successfully", lang, count=len(df_outage)))
 
                 # Show key metrics
-                st.markdown("### Summary Statistics")
+                st.markdown(f"### {t('summary_statistics', lang)}")
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
-                    st.metric("Number of Clusters", f"{df_outage['cluster'].nunique()}")
+                    st.metric(t("num_clusters", lang), f"{df_outage['cluster'].nunique()}")
 
                 with col2:
                     avg_duration = df_outage['duration'].mean()
-                    st.metric("Average Duration", f"{avg_duration:.0f} minutes")
+                    st.metric(t("avg_duration", lang), f"{avg_duration:.0f} {t('minutes', lang)}")
                 with col3:
                     total_outages = len(df_outage)
-                    st.metric("Total Outages", f"{total_outages:,}")
+                    st.metric(t("total_outages", lang), f"{total_outages:,}")
 
                 with col4:
                     unique_districts = df_outage['district'].nunique()
-                    st.metric("Number of Districts", f"{unique_districts}")
+                    st.metric(t("num_districts", lang), f"{unique_districts}")
 
                 st.markdown("---")
 
                 # Cluster distribution
-                st.subheader("Distribution of Outages by Cluster")
+                st.subheader(t("cluster_distribution", lang))
                 st.plotly_chart(plot_cluster_distribution(df_outage), use_container_width=True)
 
                 st.markdown("---")
 
                 # Cluster characteristics
-                st.subheader("Average Characteristics of Each Cluster")
+                st.subheader(t("cluster_characteristics", lang))
                 st.plotly_chart(plot_cluster_characteristics(df_outage), use_container_width=True)
 
                 st.markdown("---")
 
                 # Time patterns
-                st.subheader("Time Patterns of Power Outages by Cluster")
+                st.subheader(t("time_patterns", lang))
                 st.plotly_chart(plot_cluster_by_time(df_outage), use_container_width=True)
 
                 st.markdown("---")
@@ -882,35 +1236,35 @@ def main():
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    st.subheader("Geographic Distribution")
+                    st.subheader(t("geographic_distribution", lang))
                     st.plotly_chart(plot_cluster_by_district(df_outage), use_container_width=True)
 
                 with col2:
-                    st.subheader("Distribution by Day of Week")
+                    st.subheader(t("distribution_by_day", lang))
                     st.plotly_chart(plot_cluster_by_day(df_outage), use_container_width=True)
 
                 st.markdown("---")
 
                 # Weather correlation
-                st.subheader("Weather Correlation with Clusters")
+                st.subheader(t("weather_correlation", lang))
                 st.plotly_chart(plot_cluster_weather_correlation(df_outage), use_container_width=True)
 
                 st.markdown("---")
 
                 # Cluster details
-                st.subheader("Detailed Cluster Analysis")
+                st.subheader(t("detailed_cluster", lang))
 
                 clusters = sorted(df_outage['cluster'].unique())
                 selected_cluster = st.selectbox(
-                    "Select a cluster to view details",
+                    t("select_cluster", lang),
                     clusters,
-                    format_func=lambda x: f"Cluster {x}"
+                    format_func=lambda x: t("cluster", lang, num=x)
                 )
 
                 render_cluster_summary(df_outage, selected_cluster)
 
                 # Show sample data
-                with st.expander("View sample data of the selected cluster"):
+                with st.expander(t("view_sample_data", lang)):
                     cluster_sample = df_outage[df_outage['cluster'] == selected_cluster].head(20)
                     display_cols = ['date', 'day_of_week', 'district', 'start', 'end',
                                    'duration', 'temp', 'rain', 'wind_gust', 'cluster']
@@ -918,32 +1272,32 @@ def main():
 
     # Tab 7: Additional Analytics
     with tab7:
-        st.header("การวิเคราะห์เพิ่มเติม")
+        st.header(t("additional_analysis", lang))
 
         # Time patterns
-        st.subheader("รูปแบบตามเวลา")
+        st.subheader(t("time_patterns_title", lang))
 
         col1, col2 = st.columns(2)
 
         with col1:
-            st.markdown("**รูปแบบตามช่วงเวลาในวัน**")
+            st.markdown(f"**{t('hourly_pattern', lang)}**")
             st.plotly_chart(plot_hourly_pattern(df_filtered), use_container_width=True)
 
         with col2:
-            st.markdown("**รูปแบบตามวันในสัปดาห์**")
+            st.markdown(f"**{t('weekday_pattern', lang)}**")
             st.plotly_chart(plot_weekday_pattern(df_filtered), use_container_width=True)
 
         # Time series comparison
-        st.subheader("เปรียบเทียบแนวโน้มแต่ละเขต")
-        st.markdown("""
+        st.subheader(t("compare_trends", lang))
+        st.markdown(f"""
         <div class="info-box">
-        <b>คำอธิบาย:</b> เปรียบเทียบแนวโน้มจำนวน complaint ของหลายเขตตามเวลา
+        {t("compare_trends_desc", lang)}
         </div>
         """, unsafe_allow_html=True)
 
         top_districts_for_comparison = df_filtered['district'].value_counts().head(10).index.tolist()
         selected_districts = st.multiselect(
-            "เลือกเขตที่ต้องการเปรียบเทียบ",
+            t("select_districts_compare", lang),
             top_districts_for_comparison,
             default=top_districts_for_comparison[:5]
         )
@@ -952,38 +1306,38 @@ def main():
             st.plotly_chart(plot_time_series_comparison(df_filtered, selected_districts), use_container_width=True)
 
         # Summary statistics
-        st.subheader("สถิติสรุป")
+        st.subheader(t("summary_stats", lang))
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.markdown("**Top 5 เขตที่มี Complaint มากที่สุด**")
+            st.markdown(f"**{t('top_5_districts', lang)}**")
             top_districts = df_filtered['district'].value_counts().head(5)
             for district, count in top_districts.items():
                 st.write(f"- {district}: {count:,}")
 
         with col2:
-            st.markdown("**Top 5 ประเภท Complaint**")
+            st.markdown(f"**{t('top_5_types', lang)}**")
             top_types = df_filtered['primary_type'].value_counts().head(5)
             for ptype, count in top_types.items():
                 st.write(f"- {ptype}: {count:,}")
 
         with col3:
-            st.markdown("**สถิติเวลาแก้ปัญหา**")
-            st.write(f"- เฉลี่ย: {df_filtered['solve_days'].mean():.1f} วัน")
-            st.write(f"- มัธยฐาน: {df_filtered['solve_days'].median():.1f} วัน")
-            st.write(f"- สูงสุด: {df_filtered['solve_days'].max():.0f} วัน")
-            st.write(f"- ต่ำสุด: {max(0, df_filtered['solve_days'].min()):.0f} วัน")
+            st.markdown(f"**{t('resolution_stats', lang)}**")
+            st.write(f"- {t('average', lang)}: {df_filtered['solve_days'].mean():.1f} {t('days', lang)}")
+            st.write(f"- {t('median', lang)}: {df_filtered['solve_days'].median():.1f} {t('days', lang)}")
+            st.write(f"- {t('maximum', lang)}: {df_filtered['solve_days'].max():.0f} {t('days', lang)}")
+            st.write(f"- {t('minimum', lang)}: {max(0, df_filtered['solve_days'].min()):.0f} {t('days', lang)}")
 
     # Footer
     st.markdown("---")
     st.markdown(f"""
         <div style='text-align: center; color: #666; padding: 2rem;'>
-            <p style='font-size: 1.2rem; font-weight: bold;'>Urban Issue Forecasting System</p>
-            <p>DSDE M150-Lover Team | Chulalongkorn University</p>
-            <p>Data Source: Bangkok Traffy Fondue | Data Rows: {len(df):,}</p>
-            <p>ML Models: RandomForest Forecaster + Isolation Forest Anomaly Detector + K-Means Outage Clustering</p>
-            <p>Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <p style='font-size: 1.2rem; font-weight: bold;'>{t("footer_title", lang)}</p>
+            <p>{t("footer_team", lang)}</p>
+            <p>{t("data_source", lang)}: Bangkok Traffy Fondue | {t("data_rows", lang)}: {len(df):,}</p>
+            <p>{t("ml_models", lang)}: RandomForest Forecaster + Isolation Forest Anomaly Detector + K-Means Outage Clustering</p>
+            <p>{t("last_updated", lang)}: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
         </div>
     """, unsafe_allow_html=True)
 
